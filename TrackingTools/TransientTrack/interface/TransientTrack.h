@@ -13,7 +13,6 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/Common/interface/RefToBase.h"
-
 namespace reco {
 
   class TransientTrack : private BasicTransientTrack::Proxy {
@@ -45,6 +44,7 @@ namespace reco {
     TransientTrack(const Track& tk, const MagneticField* field);
     TransientTrack(const TrackRef& tk, const MagneticField* field);
     TransientTrack(const CandidatePtr& ptr, const MagneticField* field);
+    TransientTrack(const Track& tk, const MTDsoaElements& soa, const double time, const double dtime, const MagneticField* field);
     TransientTrack(const TrackRef& tk,
                    const MagneticField* field,
                    const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry);
@@ -144,6 +144,7 @@ namespace reco {
     /// Make the ReferenceCountingProxy method to check validity public
     bool isValid() const { return Base::isValid(); }
   };
+
 
 }  // namespace reco
 

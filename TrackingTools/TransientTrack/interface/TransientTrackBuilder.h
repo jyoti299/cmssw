@@ -44,7 +44,16 @@ public:
   std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl,
                                           const edm::ValueMap<float>& trackTimes,
                                           const edm::ValueMap<float>& trackTimeResos) const;
-
+//JB
+  std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl,
+			                  const MTDsoaElements& soa,
+					  const reco::BeamSpot& beamSpot,
+                                          const edm::ValueMap<float>& trackTimes,
+                                          const edm::ValueMap<float>& trackTimeResos) const;
+  std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl,
+                                          const MTDsoaElements& soa,
+                                          const edm::ValueMap<float>& trackTimes,
+                                          const edm::ValueMap<float>& trackTimeResos) const;
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
                                           const reco::BeamSpot& beamSpot) const;
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::GsfTrackCollection>& trkColl,
@@ -60,10 +69,19 @@ public:
                                           const reco::BeamSpot& beamSpot,
                                           const edm::ValueMap<float>& trackTimes,
                                           const edm::ValueMap<float>& trackTimeResos) const;
+  
   std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl,
                                           const reco::BeamSpot& beamSpot,
                                           const edm::ValueMap<float>& trackTimes,
-                                          const edm::ValueMap<float>& trackTimeResos) const;
+   					  const edm::ValueMap<float>& trackTimeResos) const;
+
+  std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
+                                          const reco::BeamSpot& beamSpot,
+                                          const float& trackMTDTimes,
+                                          const float& trackMTDTimeResos) const;
+  std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
+                                          const float& trackMTDTimes,
+                                          const float& trackMTDTimeResos) const;
 
   reco::TransientTrack build(const FreeTrajectoryState& fts) const;
 

@@ -17,5 +17,7 @@
 
 #include "DataFormats/VertexReco/interface/TrackTimeLifeInfo.h"
 
+#include "DataFormats/VertexReco/interface/MtdtimeSoA.h"
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
 #include <vector>
 #include <utility>

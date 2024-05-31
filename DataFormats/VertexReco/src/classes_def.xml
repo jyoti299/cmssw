@@ -52,5 +52,22 @@
   <class name="std::vector<TrackTimeLifeInfo>"/>
   <class name="edm::Wrapper<std::vector<TrackTimeLifeInfo> >"/>
   <class name="edm::ValueMap<TrackTimeLifeInfo>"/>
-  <class name="edm::Wrapper<edm::ValueMap<TrackTimeLifeInfo> >"/>
+	  <class name="edm::Wrapper<edm::ValueMap<TrackTimeLifeInfo> >"/>
+			  		  
+  <class name="MtdtimeSoA"/>
+  <class name="MtdtimeSoA::View"/>
+  <class name="MtdtimeHostCollection"/>
+  <read
+    sourceClass="MtdtimeHostCollection"
+    targetClass="MtdtimeHostCollection"
+    version="[1-]"
+    source="MtdtimeSoA layout_;"
+    target="buffer_,layout_,view_"
+    embed="false">
+  <![CDATA[
+    MtdtimeHostCollection::ROOTReadStreamer(newObj, onfile.layout_);
+  ]]>
+  </read>
+  <class name="edm::Wrapper<MtdtimeHostCollection>" splitLevel="0"/>  
+			  
 </lcgdict>

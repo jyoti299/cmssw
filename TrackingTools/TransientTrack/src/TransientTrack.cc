@@ -19,6 +19,10 @@ TransientTrack::TransientTrack(const TrackRef& tk, const MagneticField* field) :
 
 TransientTrack::TransientTrack(const TrackRef& tk, const double time, const double dtime, const MagneticField* field)
     : Base(new TTT(tk, time, dtime, field)) {}
+//JB
+
+TransientTrack::TransientTrack(const Track& tk, const MTDsoaElements& soa, const double time, const double dtime, const MagneticField* field)
+    : Base(new TTT(tk, soa, time, dtime, field)) {}
 
 TransientTrack::TransientTrack(const Track& tk,
                                const MagneticField* field,

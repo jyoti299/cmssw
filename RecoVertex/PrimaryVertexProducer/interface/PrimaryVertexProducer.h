@@ -55,7 +55,7 @@
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmBase.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmFromTracksPID.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmLegacy4D.h"
-
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
 //
 // class declaration
 //
@@ -102,7 +102,7 @@ private:
   edm::EDGetTokenT<edm::ValueMap<float> > trkTimesToken;
   edm::EDGetTokenT<edm::ValueMap<float> > trkTimeResosToken;
   edm::EDGetTokenT<edm::ValueMap<float> > trackMTDTimeQualityToken;
-
+  edm::EDGetTokenT<MtdtimeHostCollection> inputTimingToken_;
   bool useTransientTrackTime_;
   bool useMVASelection_;
   edm::ValueMap<float> trackMTDTimeQualities_;

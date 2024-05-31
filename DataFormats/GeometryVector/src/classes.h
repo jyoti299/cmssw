@@ -6,7 +6,8 @@ namespace {
 
 #include "DataFormats/GeometryVector/interface/Basic3DVector.h"
 //
-
+#include "DataFormats/Common/interface/ValueMap.h"
+#include "DataFormats/Common/interface/Wrapper.h"
 #include "DataFormats/GeometryVector/interface/LocalPoint.h"
 #include "DataFormats/GeometryVector/interface/Point2DBase.h"
 #include "DataFormats/GeometryVector/interface/Point3DBase.h"

@@ -5,6 +5,7 @@ import FWCore.ParameterSet.Config as cms
 from TrackingTools.TransientTrack.TransientTrackBuilder_cfi import *
 from RecoVertex.PrimaryVertexProducer.OfflinePrimaryVertices_cfi import *
 from RecoVertex.PrimaryVertexProducer.OfflinePrimaryVerticesWithBS_cfi import *
+#from RecoVertex.PrimaryVertexProducer.mtdSoAProducer_cfi import mtdSoAProducer as _mtdSoAProducer
 from RecoVertex.V0Producer.generalV0Candidates_cff import *
 from RecoVertex.AdaptiveVertexFinder.inclusiveVertexing_cff import *
 
@@ -12,6 +13,9 @@ from CommonTools.RecoAlgos.TrackWithVertexRefSelector_cfi import *
 from RecoJets.JetProducers.TracksForJets_cff import *
 from CommonTools.RecoAlgos.sortedPrimaryVertices_cfi import *
 from RecoJets.JetProducers.caloJetsForTrk_cff import *
+
+#mtdSoA = _mtdSoAProducer.clone()
+#mtdSoATask = cms.Task(mtdSoA)
 
 unsortedOfflinePrimaryVertices=offlinePrimaryVertices.clone()
 offlinePrimaryVertices=sortedPrimaryVertices.clone(
@@ -37,7 +41,8 @@ vertexrecoTask = cms.Task(unsortedOfflinePrimaryVertices,
                           offlinePrimaryVerticesWithBS,
                           generalV0Candidates,
                           caloJetsForTrkTask,
-                          inclusiveVertexingTask
+                          inclusiveVertexingTask,
+                          #mtdSoATask
                           )
 vertexreco = cms.Sequence(vertexrecoTask)
 

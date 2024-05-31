@@ -15,14 +15,16 @@
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateClosestToBeamLine.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
-
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
+#include <tuple>
+using MTDsoaElements = MtdtimeHostCollection;
 namespace reco {
 
   class BasicTransientTrack {
   public:
     using BTT = BasicTransientTrack;
     using Proxy = ProxyBase11<BTT>;
-
+  //  using MTDsoaElements = MtdtimeHostCollection;
   public:
     virtual ~BasicTransientTrack() {}
 
@@ -53,14 +55,16 @@ namespace reco {
 
     virtual double timeExt() const = 0;
     virtual double dtErrorExt() const = 0;
-
+    //virtual std::tuple<MTDsoaElements&, int32_t> getMTDtimeElements(const MTDsoaElements&) = 0;
+    //virtual void  getMTDtimeElements(const MTDsoaElements&) = 0; 
+    //virtual auto& getMTDtimeElements(const MTDsoaElements&) = 0;
+    //virtual std::tuple<float,int32_t> getMTDtimeElements(const MTDsoaElements&) = 0; 
     //     virtual bool operator== (const TransientTrack & a) const = 0;
     //     virtual bool operator< (const TransientTrack & a) const = 0;
+   // virtual const MTDsoaElements& soa() const = 0; 
 
     virtual const MagneticField* field() const = 0;
-
     virtual const Track& track() const = 0;
-
     virtual TrajectoryStateClosestToBeamLine stateAtBeamLine() const = 0;
   };
 

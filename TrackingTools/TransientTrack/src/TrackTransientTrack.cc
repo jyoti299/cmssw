@@ -30,7 +30,6 @@ TrackTransientTrack::TrackTransientTrack()
       m_TSOS(kUnset),
       m_TSCP(kUnset),
       m_SCTBL(kUnset)
-
 {}
 
 TrackTransientTrack::TrackTransientTrack(const Track& tk, const MagneticField* field)
@@ -46,6 +45,19 @@ TrackTransientTrack::TrackTransientTrack(const Track& tk, const MagneticField* f
   initialFTS = trajectoryStateTransform::initialFreeState(tk, field);
 }
 
+TrackTransientTrack::TrackTransientTrack(const Track& tk, const MTDsoaElements& soaelement, const double time, const double dtime, const MagneticField* field) 
+     : Track(tk),
+      tkr_(),
+      hasTime(true),
+      timeExt_(time),
+      dtErrorExt_(dtime),
+      theField(field),
+      m_TSOS(kUnset),
+      m_TSCP(kUnset),
+      m_SCTBL(kUnset)
+      {
+     initialFTS = trajectoryStateTransform::initialFreeState(tk, field);
+      }
 TrackTransientTrack::TrackTransientTrack(const Track& tk,
                                          const double time,
                                          const double dtime,
@@ -184,7 +196,6 @@ TrackTransientTrack::TrackTransientTrack(const TrackTransientTrack& tt)
 void TrackTransientTrack::setTrackingGeometry(const edm::ESHandle<GlobalTrackingGeometry>& tg) {
   theTrackingGeometry = tg;
 }
-
 void TrackTransientTrack::setBeamSpot(const BeamSpot& beamSpot) {
   theBeamSpot = beamSpot;
   m_SCTBL = kUnset;

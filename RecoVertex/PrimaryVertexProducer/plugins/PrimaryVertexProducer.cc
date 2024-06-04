@@ -17,7 +17,7 @@
 
 PrimaryVertexProducer::PrimaryVertexProducer(const edm::ParameterSet& conf)
     : theTTBToken(esConsumes(edm::ESInputTag("", "TransientTrackBuilder"))), theConfig(conf) {
-  fVerbose = conf.getUntrackedParameter<bool>("verbose", false);
+  fVerbose = conf.getUntrackedParameter<bool>("verbose", true);
   useMVASelection_ = conf.getParameter<bool>("useMVACut");
 
   trkToken = consumes<reco::TrackCollection>(conf.getParameter<edm::InputTag>("TrackLabel"));
@@ -194,7 +194,7 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
   edm::Handle<reco::TrackCollection> tks;
   iEvent.getByToken(trkToken, tks);
   edm::Handle<MtdtimeHostCollection> inputTiming_h;
-  iEvent.getByToken(inputTimingToken_,inputTiming_h);
+  //iEvent.getByToken(inputTimingToken_,inputTiming_h);
   // mechanism to put the beamspot if the track collection is empty
   if (!tks.isValid()) {
     for (std::vector<algo>::const_iterator algorithm = algorithms.begin(); algorithm != algorithms.end(); algorithm++) {
@@ -236,29 +236,42 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
   const auto& theB = &iSetup.getData(theTTBToken);
   std::vector<reco::TransientTrack> t_tks;
   if (useTransientTrackTime_) {
-      auto const &inputTimingView = (*inputTiming_h).const_view();	  
-      auto const maxsize = inputTimingView.metadata().size();
-      for (int k = 0; k < maxsize; k++ ) {
-      const auto& trackMTDTimeResos_ = inputTimingView.time0Err()[k];
-      const auto& trackMTDTimes_ = inputTimingView.time0()[k];     
-    //auto const& trackTimeResos_ = iEvent.get(trkTimeResosToken);
-    //auto trackTimes_ = iEvent.get(trkTimesToken);
+      //iEvent.getByToken(inputTimingToken_,inputTiming_h);
+     // auto const &inputTimingView = (*inputTiming_h).const_view();
+      auto const &inputTimingView = iEvent.get(inputTimingToken_).const_view();
+      auto const maxsize = inputTimingView.metadata().size();		   
 
+      if (fVerbose) {
+             std::cout<<"RecoVertex/PrimaryVertexProducer: "
+                     <<" Just for (*tks).size() "<<(*tks).size()<<std::endl; }
+      
+      for (unsigned int k =0; k < (*tks).size() ; k++) {
+      auto const& trkidx = inputTimingView.trackAsocMTD()[k];
+      const reco::TrackRef trackref(tks, k);
+      const auto& trackMTDTimeResos_[trackref] = inputTimingView.timeErr()[trkidx];
+      const auto& trackMTDTimes_[trackref] = inputTimingView.time()[trkidx];     
+      }
+      auto const& trackTimeResos_ = iEvent.get(trkTimeResosToken);
+      auto trackTimes_ = iEvent.get(trkTimesToken);
+     if (fVerbose) {
+	     std::cout<<"RecoVertex/PrimaryVertexProducer: "
+		     <<" max size "<<maxsize<<" trackMTDTimeResos_"<<trackMTDTimeResos_<<" trackMTDTimes_"<< trackMTDTimes_<<" (*tks).size() "<<(*tks).size()<<std::endl;
+  }
+     
     if (useMVASelection_) {
       trackMTDTimeQualities_ = iEvent.get(trackMTDTimeQualityToken);
-
       for (unsigned int i = 0; i < (*tks).size(); i++) {
         const reco::TrackRef ref(tks, i);
         auto const trkTimeQuality = trackMTDTimeQualities_[ref];
-       /* if (trkTimeQuality < minTrackTimeQuality_) {
+        if (trkTimeQuality < minTrackTimeQuality_) {
           trackTimes_[ref] = std::numeric_limits<double>::max();
-        }*/
+        }
       }
-      t_tks = (*theB).build(tks, beamSpot, trackMTDTimes_, trackMTDTimeResos_);
+      t_tks = (*theB).build(tks, beamSpot, trackTimes_, trackTimeResos_);
     } else {
-      t_tks = (*theB).build(tks, beamSpot, trackMTDTimes_, trackMTDTimeResos_);
+      t_tks = (*theB).build(tks, beamSpot, trackTimes_, trackTimeResos_);
     }
-   }
+   //}
   } else {
     t_tks = (*theB).build(tks, beamSpot);
   }

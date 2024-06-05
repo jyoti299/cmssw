@@ -6,7 +6,8 @@
 #include "DataFormats/GsfTrackReco/interface/GsfTrackFwd.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Common/interface/ValueMap.h"
-
+#include "DataFormats/VertexReco/interface/MtdtimeSoA.h"
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
 /**
    * Helper class to build TransientTrack from the persistent Track.
    * This is obtained from the eventSetup, as given in the example in the test
@@ -17,7 +18,6 @@ class TransientTrackBuilder {
 public:
   TransientTrackBuilder(const MagneticField* field, const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry)
       : theField(field), theTrackingGeometry(trackingGeometry) {}
-
   reco::TransientTrack build(const reco::Track* p) const;
   reco::TransientTrack build(const reco::Track& p) const;
   reco::TransientTrack build(const reco::GsfTrack* p) const;
@@ -44,14 +44,16 @@ public:
   std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl,
                                           const edm::ValueMap<float>& trackTimes,
                                           const edm::ValueMap<float>& trackTimeResos) const;
-//JB
-  std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl,
-			                  const MTDsoaElements& soa,
+//J
+/*
+  std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
+
+			                  const edm::Handle<MtdtimeHostCollection>& soa,
 					  const reco::BeamSpot& beamSpot,
                                           const edm::ValueMap<float>& trackTimes,
-                                          const edm::ValueMap<float>& trackTimeResos) const;
-  std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl,
-                                          const MTDsoaElements& soa,
+                                          const edm::ValueMap<float>& trackTimeResos) const; */
+  std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
+                                          const edm::Handle<MtdtimeHostCollection>& soa,
                                           const edm::ValueMap<float>& trackTimes,
                                           const edm::ValueMap<float>& trackTimeResos) const;
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
@@ -76,15 +78,15 @@ public:
    					  const edm::ValueMap<float>& trackTimeResos) const;
 
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
+		                          const edm::Handle<MtdtimeHostCollection>& soa,
                                           const reco::BeamSpot& beamSpot,
-                                          const float& trackMTDTimes,
-                                          const float& trackMTDTimeResos) const;
+                                          const edm::ValueMap<float>& trackMTDTimes,
+                                          const edm::ValueMap<float>& trackMTDTimeResos) const;
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
                                           const float& trackMTDTimes,
                                           const float& trackMTDTimeResos) const;
 
   reco::TransientTrack build(const FreeTrajectoryState& fts) const;
-
   const MagneticField* field() const { return theField; }
   const edm::ESHandle<GlobalTrackingGeometry> trackingGeometry() const { return theTrackingGeometry; }
   static constexpr float defaultInvalidTrackTimeReso = 0.350f;

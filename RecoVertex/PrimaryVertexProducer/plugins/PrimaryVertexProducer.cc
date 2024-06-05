@@ -239,37 +239,36 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       //iEvent.getByToken(inputTimingToken_,inputTiming_h);
      // auto const &inputTimingView = (*inputTiming_h).const_view();
       auto const &inputTimingView = iEvent.get(inputTimingToken_).const_view();
-      auto const maxsize = inputTimingView.metadata().size();		   
-
+      auto const maxsize = inputTimingView.metadata().size();		  
+     for (unsigned int i = 0; i < (*tks).size(); i++) {
+      const reco::TrackRef ref(tks, i);
+      unsigned int index = ref.key();
       if (fVerbose) {
              std::cout<<"RecoVertex/PrimaryVertexProducer: "
-                     <<" Just for (*tks).size() "<<(*tks).size()<<std::endl; }
-      
-      for (unsigned int k =0; k < (*tks).size() ; k++) {
-      auto const& trkidx = inputTimingView.trackAsocMTD()[k];
-      const reco::TrackRef trackref(tks, k);
-      const auto& trackMTDTimeResos_[trackref] = inputTimingView.timeErr()[trkidx];
-      const auto& trackMTDTimes_[trackref] = inputTimingView.time()[trkidx];     
-      }
+                      <<" Just for (*tks).size() "<<(*tks).size()<<" index "<<index<<std::endl; }
+      //const auto&  trackTimeResos_ = inputTimingView.timeErr();
+      //const auto&  trackTimes_ = inputTimingView.time();     
+     }
       auto const& trackTimeResos_ = iEvent.get(trkTimeResosToken);
       auto trackTimes_ = iEvent.get(trkTimesToken);
-     if (fVerbose) {
+    /* if (fVerbose) {
 	     std::cout<<"RecoVertex/PrimaryVertexProducer: "
 		     <<" max size "<<maxsize<<" trackMTDTimeResos_"<<trackMTDTimeResos_<<" trackMTDTimes_"<< trackMTDTimes_<<" (*tks).size() "<<(*tks).size()<<std::endl;
   }
-     
+     */
     if (useMVASelection_) {
       trackMTDTimeQualities_ = iEvent.get(trackMTDTimeQualityToken);
       for (unsigned int i = 0; i < (*tks).size(); i++) {
         const reco::TrackRef ref(tks, i);
+	unsigned int index = ref.key();
         auto const trkTimeQuality = trackMTDTimeQualities_[ref];
-        if (trkTimeQuality < minTrackTimeQuality_) {
+        /*if (trkTimeQuality < minTrackTimeQuality_) {
           trackTimes_[ref] = std::numeric_limits<double>::max();
-        }
+        }*/
       }
-      t_tks = (*theB).build(tks, beamSpot, trackTimes_, trackTimeResos_);
+      t_tks = (*theB).build(tks, inputTiming_h, beamSpot, trackTimes_, trackTimeResos_);
     } else {
-      t_tks = (*theB).build(tks, beamSpot, trackTimes_, trackTimeResos_);
+      t_tks = (*theB).build(tks, inputTiming_h, beamSpot, trackTimes_, trackTimeResos_);
     }
    //}
   } else {

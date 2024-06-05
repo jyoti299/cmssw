@@ -17,7 +17,7 @@
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
 #include <tuple>
-using MTDsoaElements = MtdtimeHostCollection;
+using MTDsoaElements = MtdtimeSoAConstView; //MtdtimeHostCollection;
 namespace reco {
 
   class BasicTransientTrack {

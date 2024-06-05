@@ -12,7 +12,7 @@
 using namespace reco;
 using namespace std;
 using namespace edm;
-
+using MTDsoaElements = MtdtimeSoAConstView;
 TransientTrack TransientTrackBuilder::build(const Track* t) const {
   return TransientTrack(*t, theField, theTrackingGeometry);
 }
@@ -91,9 +91,10 @@ vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<edm::View<
   }
   return ttVect;
 }
-//JB 
-/*vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<edm::View<Track> >& trkColl,
-		                                    const MTDsoaElements& soa,
+//JB
+/* 
+vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<reco::TrackCollection>& trkColl,
+		                                    const edm::Handle<MtdtimeHostCollection>& soa,
 						    const reco::BeamSpot& beamSpot,
                                                     const edm::ValueMap<float>& trackTimes,
                                                     const edm::ValueMap<float>& trackTimeResos) const {
@@ -102,17 +103,29 @@ vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<edm::View<
   for (unsigned int i = 0; i < ttVect.size(); i++) {
     ttVect[i].setBeamSpot(beamSpot);
   }
-  return ttVect;
-}
-vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<edm::View<Track> >& trkColl,
-                                                    const MTDsoaElements& soa,
-                                                    const edm::ValueMap<float>& trackTimes,
-                                                    const edm::ValueMap<float>& trackTimeResos) const {
-  vector<TransientTrack> ttVect = build(trkColl, soa.const_view(), trackTimes, trackTimeResos);
-
-  return ttVect;
+  return ttVect; 
 }*/
 vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<reco::TrackCollection>& trkColl,
+                                                    const edm::Handle<MtdtimeHostCollection>& soa,
+                                                    const edm::ValueMap<float>& trackTimes,
+                                                    const edm::ValueMap<float>& trackTimeResos) const {
+  vector<TransientTrack> ttVect;
+  ttVect.reserve((*trkColl).size());
+  for (unsigned int i = 0; i < (*trkColl).size(); i++) {
+    TrackRef ref(trkColl, i);
+    double time = (*soa).const_view().time()[i];	
+    double timeReso = (*soa).const_view().timeErr()[i];
+    timeReso = (timeReso > 1e-6 ? timeReso
+                                : defaultInvalidTrackTimeReso);  // make the error much larger than the BS time width
+    if (edm::isNotFinite(time)) {
+      time = 0.0;
+      timeReso = defaultInvalidTrackTimeReso;
+    }
+    ttVect.push_back(TransientTrack(ref, time, timeReso, theField,  theTrackingGeometry));
+  }
+  return ttVect;
+}
+vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<reco::TrackCollection>& trkColl,
                                                     const float& trackMTDTimes,
                                                     const float& trackMTDTimeResos) const {
   vector<TransientTrack> ttVect = build(trkColl, trackMTDTimes, trackMTDTimeResos);
@@ -120,10 +133,12 @@ vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<reco::Trac
 }
 
 vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<reco::TrackCollection>& trkColl,
+                                                    const edm::Handle<MtdtimeHostCollection>& soa,
                                                     const reco::BeamSpot& beamSpot,
-                                                    const float& trackMTDTimes,
-                                                    const float& trackMTDTimeResos) const {
-  vector<TransientTrack> ttVect = build(trkColl, trackMTDTimes, trackMTDTimeResos);
+                                                    const edm::ValueMap<float>& trackMTDTimes,
+                                                    const edm::ValueMap<float>& trackMTDTimeResos) const {
+  vector<TransientTrack> ttVect = build(trkColl, soa, trackMTDTimes, trackMTDTimeResos);
+  std::cout<<" *********** THIS ONE *********"<<std::endl;
   for (unsigned int i = 0; i < ttVect.size(); i++) {
     ttVect[i].setBeamSpot(beamSpot);
   }

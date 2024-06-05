@@ -13,7 +13,7 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "TrackingTools/PatternTools/interface/TSCPBuilderNoMaterial.h"
 #include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
-using MTDsoaElements = MtdtimeHostCollection; //MtdtimeHostCollection;
+using MTDsoaElements = MtdtimeSoAConstView; //MtdtimeHostCollection;
 using namespace std;
 namespace reco {
   class TrackTransientTrack : public Track, public BasicTransientTrack {

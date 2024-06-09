@@ -33,7 +33,14 @@ namespace reco {
                         const double dtime,
                         const MagneticField* field,
                         const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry);
-
+    TrackTransientTrack(const TrackRef& tk,
+		        const float trkAssoc,
+                        const double time,
+                        const double dtime,
+                       /* float mva, float pathlength, float btlchi2,  float btltimechi2, float etlchi2, float etltimechi2,float time_pi, float time_k, float time_p, float sigma_time_pi, float sigma_time_k, float sigma_time_p,*/
+                        const float mva, const float pathlength, const float btlchi2, const float btltimechi2, const float etlchi2, const float etltimechi2, const float time_pi, const float time_k, const float time_p, const float sigma_time_pi, const float sigma_time_k, const float sigma_time_p,
+                        const MagneticField* field,
+                        const edm::ESHandle<GlobalTrackingGeometry>& tg);
     TrackTransientTrack(const Track& tk,
                         const MagneticField* field,
                         const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry);
@@ -89,15 +96,27 @@ namespace reco {
 
     double timeExt() const override { return (hasTime ? timeExt_ : std::numeric_limits<double>::quiet_NaN()); }
     double dtErrorExt() const override { return (hasTime ? dtErrorExt_ : std::numeric_limits<double>::quiet_NaN()); }
-
+    float trackAsocMTD() const { return trkAssoc_; }
+    float MVAquality() const { return mva_; }
+    float pathLength() const { return pathlength_; }
+    float btlMatch_chi2() const { return btlchi2_; }
+    float btlMatchTime_chi2() const { return btltimechi2_; }
+    float etlMatch_chi2() const { return etlchi2_; }
+    float etlMatchTime_chi2() const { return etltimechi2_; }
+    float trackTime_pi() const { return time_pi_; }
+    float trackTime_k() const { return time_k_; }
+    float trackTime_p() const { return time_p_; }
+    float sigma_time_pi() const {return sigma_time_pi_; }
+    float sigma_time_k() const {return sigma_time_k_; }
+    float sigma_time_p() const {return sigma_time_p_; }
   private:
     TrackRef tkr_;
     bool hasTime;
+    float trkAssoc_;
     double timeExt_, dtErrorExt_;
     const MagneticField* theField;
-
     FreeTrajectoryState initialFTS;
-
+	  
     // mutable member data, those should be treated very carefully to guarantee
     // thread safeness of the code by using atomic thread-safe helpers, see below
     mutable TrajectoryStateOnSurface initialTSOS;
@@ -110,6 +129,9 @@ namespace reco {
 
     TSCPBuilderNoMaterial builder;
     edm::ESHandle<GlobalTrackingGeometry> theTrackingGeometry;
+    float mva_;
+    float pathlength_;
+    float btlchi2_, btltimechi2_, etlchi2_, etltimechi2_,time_pi_,time_k_,time_p_,sigma_time_pi_, sigma_time_k_, sigma_time_p_;
     reco::BeamSpot theBeamSpot;
 
     // to be used to setup thread states of class mutables

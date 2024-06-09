@@ -246,3 +246,24 @@ TrajectoryStateClosestToBeamLine TrackTransientTrack::stateAtBeamLine() const {
   }
   return tmp;
 }
+
+TrackTransientTrack::TrackTransientTrack(const TrackRef& tk,
+		                         const float trkAssoc,
+                                         const double time,
+                                         const double dtime,
+					 const float mva, const float pathlength, const float btlchi2, const float btltimechi2, const float etlchi2, const float etltimechi2, const float time_pi, const float time_k, const float time_p, const float sigma_time_pi, const float sigma_time_k, const float sigma_time_p,
+                                         const MagneticField* field,
+                                         const edm::ESHandle<GlobalTrackingGeometry>& tg)
+    : Track(*tk),
+      tkr_(tk),
+      hasTime(true),
+      trkAssoc_(trkAssoc),	
+      timeExt_(time),
+      dtErrorExt_(dtime),
+      theField(field),
+      m_TSOS(kUnset),
+      m_TSCP(kUnset),
+      m_SCTBL(kUnset),
+      theTrackingGeometry(tg), mva_(mva), pathlength_(pathlength), btlchi2_(btlchi2), btltimechi2_(btltimechi2), etlchi2_(etlchi2), etltimechi2_(etltimechi2), time_pi_(time_pi), time_k_(time_k), time_p_(time_p), sigma_time_pi_(sigma_time_pi), sigma_time_k_(sigma_time_k), sigma_time_p_(sigma_time_p) {
+  initialFTS = trajectoryStateTransform::initialFreeState(*tk, field);
+}

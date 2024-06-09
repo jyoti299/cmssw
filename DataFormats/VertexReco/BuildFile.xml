@@ -3,6 +3,8 @@
 <use name="DataFormats/Math"/>
 <use name="DataFormats/TrackReco"/>
 <use name="DataFormats/TrajectorySeed"/>
+<use name="DataFormats/SoATemplate"/>
+<use name="DataFormats/Portable"/>
 <export>
   <lib name="1"/>
 </export>

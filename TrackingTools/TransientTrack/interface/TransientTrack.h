@@ -75,6 +75,14 @@ namespace reco {
                    const MagneticField* field,
                    const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry);
 
+   TransientTrack(const TrackRef& tk,
+		  const float trackAsoc, 
+		  const double time,
+                  const double dtime, 
+		  const float mva, const float pathlength, const float btlchi2, const float btltimechi2, const float etlchi2, const float etltimechi2, const float time_pi, const float time_k, const float time_p, const float sigma_time_pi, const float sigma_time_k, const float sigma_time_p,
+                  const MagneticField* field,
+		  const edm::ESHandle<GlobalTrackingGeometry>& trackingGeometry);
+
     void setTrackingGeometry(const edm::ESHandle<GlobalTrackingGeometry>& tg) { sharedData().setTrackingGeometry(tg); }
 
     void setBeamSpot(const reco::BeamSpot& beamSpot) { sharedData().setBeamSpot(beamSpot); }

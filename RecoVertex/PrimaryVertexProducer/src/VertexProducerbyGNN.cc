@@ -66,12 +66,9 @@ VertexProducerbyGNN::VertexProducerbyGNN(const edm::ParameterSet& conf, cms::Ort
 VertexProducerbyGNN::~VertexProducerbyGNN() {}
 
 
-std::unique_ptr<ONNXRuntime> VertexProducerbyGNN::initializeGlobalCache(const edm::ParameterSet& iConfig) {
-  return std::make_unique<ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("model_path").fullPath());
-}
 /// ******* work on this function to produce a graph or in produce method. 
-std::unique_ptr<TracksGraph> MyTrackAnalyzer::produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTracks) {
-	// have to take reference from this https://github.com/cms-sw/cmssw/blob/34d92a71fb188acad9af249df6a9bc48436432e3/DataFormats/Math/interface/Graph.h
+std::unique_ptr<TracksGraph> VertexProducerbyGNN::produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTracks) {
+	// need work on this, have to take reference from this https://github.com/cms-sw/cmssw/blob/34d92a71fb188acad9af249df6a9bc48436432e3/DataFormats/Math/interface/Graph.h
     auto tracksGraph = std::make_unique<TracksGraph>();
     for (const auto& track : transientTracks) {
         tracksGraph->addNode(track);

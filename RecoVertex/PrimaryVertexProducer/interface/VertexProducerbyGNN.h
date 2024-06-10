@@ -27,28 +27,14 @@ public:
   /// destructor
   ~VertexProducerbyGNN() override;
   static void fillDescriptions(edm::ConfigurationDescriptions&);
-  static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
   void produce(edm::Event& iEvent, const edm::EventSetup& iSetup) override;
   std::unique_ptr<TracksGraph> produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTrack);
 
 private:
-  edm::ESGetToken<BeamSpotObjects, BeamSpotObjectsRcd> m_beamToken;
 
-  TrackFilterForPVFindingBase* theTrackFilter;
-  TrackClusterizerInZ* theTrackClusterizer;
   edm::EDGetTokenT<reco::BeamSpot> bsToken;
-  edm::EDGetTokenT<reco::TrackCollection> trkToken;
-  edm::EDGetTokenT<edm::ValueMap<float> > trkTimesToken;
-  edm::EDGetTokenT<edm::ValueMap<float> > trkTimeResosToken;
-  edm::EDGetTokenT<edm::ValueMap<float> > trackMTDTimeQualityToken;
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> theTTBToken;
 
-
-  bool useTransientTrackTime_;
-  bool useMVASelection_;
-  edm::ValueMap<float> trackMTDTimeQualities_;
-  edm::ValueMap<float> trackTimes_;
-  double minTrackTimeQuality_;
 
   std::vector<float> features;
   std::vector<float> edge_features;

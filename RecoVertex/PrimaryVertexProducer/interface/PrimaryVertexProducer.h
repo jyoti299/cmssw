@@ -55,20 +55,25 @@
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmBase.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmFromTracksPID.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmLegacy4D.h"
-
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
+#include "TracksGraph.h"
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
+#include <iostream>
+#include <vector>
 //
 // class declaration
 //
+using namespace cms::Ort;
 
 class PrimaryVertexProducer : public edm::stream::EDProducer<> {
 public:
-  PrimaryVertexProducer(const edm::ParameterSet&);
+  PrimaryVertexProducer(const edm::ParameterSet&, cms::Ort::ONNXRuntime const* onnxRuntime = nullptr);
   ~PrimaryVertexProducer() override;
 
   void produce(edm::Event&, const edm::EventSetup&) override;
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-
+  std::unique_ptr<TrackGraph>  produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTrack);
   // access to config
   edm::ParameterSet config() const { return theConfig; }
 
@@ -99,6 +104,7 @@ private:
 
   edm::EDGetTokenT<reco::BeamSpot> bsToken;
   edm::EDGetTokenT<reco::TrackCollection> trkToken;
+  edm::EDGetTokenT<MtdtimeHostCollection> inputTimingToken_;
   edm::EDGetTokenT<edm::ValueMap<float> > trkTimesToken;
   edm::EDGetTokenT<edm::ValueMap<float> > trkTimeResosToken;
   edm::EDGetTokenT<edm::ValueMap<float> > trackMTDTimeQualityToken;
@@ -108,4 +114,13 @@ private:
   edm::ValueMap<float> trackMTDTimeQualities_;
   edm::ValueMap<float> trackTimes_;
   double minTrackTimeQuality_;
+
+  std::vector<float> features;
+  std::vector<float> edge_features;
+
+  std::vector<float> node_degrees;
+  std::vector<float> degree_centr;
+  std::string nnVersion_;       // Version identifier of the NN (either CNN or a GNN, to choose which inputs to use)
+  double nnWorkingPoint_;       // Working point for neural network (above this score, consider the t
+  cms::Ort::ONNXRuntime const* onnxRuntime_;
 };

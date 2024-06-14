@@ -17,10 +17,9 @@
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 PrimaryVertexProducerAlgorithm::PrimaryVertexProducerAlgorithm(const edm::ParameterSet& conf) : theConfig(conf) {
-  fVerbose = conf.getUntrackedParameter<bool>("verbose", false);
+  fVerbose = conf.getUntrackedParameter<bool>("verbose", true);
   trackLabel = conf.getParameter<edm::InputTag>("TrackLabel");
   beamSpotLabel = conf.getParameter<edm::InputTag>("beamSpotLabel");
-
   // select and configure the track selection
   std::string trackSelectionAlgorithm =
       conf.getParameter<edm::ParameterSet>("TkFilterParameters").getParameter<std::string>("algorithm");

@@ -44,7 +44,8 @@ vertexreco = cms.Sequence(vertexrecoTask)
 #modifications for timing
 from RecoVertex.Configuration.RecoVertex_phase2_timing_cff import (tpClusterProducer ,
                                                                   quickTrackAssociatorByHits ,
-                                                                  trackTimeValueMapProducer ,
+                                                                  #trackTimeValueMapProducer ,
+                                                                  mtdSoAProducer, 
                                                                   unsortedOfflinePrimaryVertices4DwithPID ,
                                                                   offlinePrimaryVertices4DwithPID ,
                                                                   offlinePrimaryVertices4DwithPIDWithBS,
@@ -60,7 +61,7 @@ from RecoVertex.Configuration.RecoVertex_phase2_timing_cff import (tpClusterProd
 _phase2_tktiming_vertexrecoTask = cms.Task( vertexrecoTask.copy() ,
                                             tpClusterProducer ,
                                             quickTrackAssociatorByHits ,
-                                            trackTimeValueMapProducer ,
+                                            #trackTimeValueMapProducer ,
                                             unsortedOfflinePrimaryVertices4D,
                                             trackWithVertexRefSelectorBeforeSorting4D ,
                                             trackRefsForJetsBeforeSorting4D,

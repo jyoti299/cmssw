@@ -11,6 +11,7 @@ unsortedOfflinePrimaryVertices4D = unsortedOfflinePrimaryVertices.clone(
     ),
     TrackTimesLabel = cms.InputTag("trackTimeValueMapProducer","generalTracksConfigurableFlatResolutionModel"),
     TrackTimeResosLabel = cms.InputTag("trackTimeValueMapProducer","generalTracksConfigurableFlatResolutionModelResolution"),
+    timingSoA = cms.InputTag("mtdSoAProducer"),
     vertexCollections = {0: dict(vertexTimeParameters = cms.PSet( algorithm = cms.string('legacy4D'))),
                          1: dict(vertexTimeParameters = cms.PSet( algorithm = cms.string('legacy4D')))}
     )
@@ -25,6 +26,8 @@ trackRefsForJetsBeforeSorting4D = trackRefsForJets.clone(
 offlinePrimaryVertices4D = sortedPrimaryVertices.clone(
     vertices = "unsortedOfflinePrimaryVertices4D",
     particles = "trackRefsForJetsBeforeSorting4D",
+    #trackTimeTag = "mtdSoAProducer",
+    #trackTimeResoTag = "mtdSoAProducer",
     trackTimeTag = "trackTimeValueMapProducer:generalTracksConfigurableFlatResolutionModel",
     trackTimeResoTag = "trackTimeValueMapProducer:generalTracksConfigurableFlatResolutionModelResolution",
     assignment = dict(useTiming = True)
@@ -50,6 +53,7 @@ offlinePrimaryVertices4DwithPID=offlinePrimaryVertices4D.clone(
     particles = "trackRefsForJetsBeforeSorting4DwithPID",
     trackTimeTag = "tofPID4DnoPID:t0safe",
     trackTimeResoTag = "tofPID4DnoPID:sigmat0safe"
+    
 )
 offlinePrimaryVertices4DwithPIDWithBS = offlinePrimaryVertices4DwithPID.clone(
     vertices = "unsortedOfflinePrimaryVertices4DwithPID:WithBS"
@@ -59,6 +63,7 @@ from SimTracker.TrackerHitAssociation.tpClusterProducer_cfi import tpClusterProd
 from SimTracker.TrackAssociatorProducers.quickTrackAssociatorByHits_cfi import quickTrackAssociatorByHits
 from SimTracker.TrackAssociation.trackTimeValueMapProducer_cfi import trackTimeValueMapProducer
 from RecoMTD.TimingIDTools.tofPIDProducer_cfi import tofPIDProducer
+from RecoMTD.TimingIDTools.mtdSoAProducer_cfi import mtdSoAProducer
 
 tofPID4DnoPID=tofPIDProducer.clone(vtxsSrc='unsortedOfflinePrimaryVertices')
 tofPID=tofPIDProducer.clone()

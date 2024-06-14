@@ -207,14 +207,14 @@ DAClusterizerInZT_vect::track_t DAClusterizerInZT_vect::fill(const vector<reco::
   // prepare track data for clustering
   track_t tks;
   double sumtkwt = 0.;
-
+std::cout <<" In fill 1111 in DA_ZT function "<<std::endl;
   for (const auto& tk : tracks) {
     if (!tk.isValid())
       continue;
     double t_tkwt = 1.;
     double t_z = tk.stateAtBeamLine().trackStateAtPCA().position().z();
     double t_t = tk.timeExt();
-
+std::cout <<" In fill 2222 in DA_ZT function "<<std::endl;
     if (std::fabs(t_z) > 1000.)
       continue;
     /*  for comparison with 1d clustering, keep such tracks without timing info, see below
@@ -234,11 +234,12 @@ DAClusterizerInZT_vect::track_t DAClusterizerInZT_vect::fill(const vector<reco::
       edm::LogWarning("DAClusterizerinZT_vect") << "rejected track t_dz2 " << t_dz2;
       continue;
     }
-
+std::cout <<" In filll 3333 in DA_ZT function "<<std::endl;
     double t_dt2 =
         std::pow(tk.dtErrorExt(), 2.) +
         std::pow(vertexSizeTime_, 2.);  // the ~injected~ timing error, need to add a small minimum vertex size in time
     if ((tk.dtErrorExt() > TransientTrackBuilder::defaultInvalidTrackTimeReso) || (std::abs(t_t) > t0Max_)) {
+	std::cout <<" In filll 444 in DA_ZT function "<<std::endl;    
       t_dt2 = 0;  // tracks with no time measurement
     } else {
       t_dt2 = 1. / t_dt2;
@@ -1108,6 +1109,7 @@ bool DAClusterizerInZT_vect::split(const double beta, track_t& tks, vertex_t& y,
 }
 
 vector<TransientVertex> DAClusterizerInZT_vect::vertices(const vector<reco::TransientTrack>& tracks) const {
+std::cout <<" In vertices in DA_ZT function "<<std::endl;	
   track_t&& tks = fill(tracks);
   tks.extractRaw();
 
@@ -1354,7 +1356,7 @@ vector<vector<reco::TransientTrack> > DAClusterizerInZT_vect::clusterize(
     const vector<reco::TransientTrack>& tracks) const {
   vector<vector<reco::TransientTrack> > clusters;
   vector<TransientVertex>&& pv = vertices(tracks);
-
+  std::cout <<" In clusterize in DA_ZT function "<<std::endl;
 #ifdef DEBUG
   if (DEBUGLEVEL > 0) {
     std::cout << "###################################################" << endl;

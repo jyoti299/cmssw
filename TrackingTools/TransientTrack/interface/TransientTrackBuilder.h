@@ -6,12 +6,14 @@
 #include "DataFormats/GsfTrackReco/interface/GsfTrackFwd.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Common/interface/ValueMap.h"
-
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
 /**
    * Helper class to build TransientTrack from the persistent Track.
    * This is obtained from the eventSetup, as given in the example in the test
    * directory.
    */
+
+
 
 class TransientTrackBuilder {
 public:
@@ -34,6 +36,14 @@ public:
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl) const;
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::GsfTrackCollection>& trkColl) const;
   std::vector<reco::TransientTrack> build(const edm::Handle<edm::View<reco::Track> >& trkColl) const;
+/*
+  std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl, const float& trackAsocMTD, const float& time,  const float& timeErr,  const float& MVAquality, const float& pathLength, const float& btlMatch_chi2, const float& btlMatchTime_chi2, const float& etlMatch_chi2, const float& etlMatchTime_chi2, const float& trackTime_pi, const float& trackTime_k, const float& trackTime_p, const float& track_sigmaTime_pi, const float& track_sigmaTime_k, const float& track_sigmaTime_p) const;
+*/
+  std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
+                                                    const edm::Handle<MtdtimeHostCollection>& soa,
+						    const reco::BeamSpot& beamSpot,
+                                                    const edm::ValueMap<float>& trackTimes,
+                                                    const edm::ValueMap<float>& trackTimeResos) const;
 
   std::vector<reco::TransientTrack> build(const edm::Handle<reco::TrackCollection>& trkColl,
                                           const edm::ValueMap<float>& trackTimes,

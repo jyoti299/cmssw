@@ -53,4 +53,9 @@
   <class name="edm::Wrapper<std::vector<TrackTimeLifeInfo> >"/>
   <class name="edm::ValueMap<TrackTimeLifeInfo>"/>
   <class name="edm::Wrapper<edm::ValueMap<TrackTimeLifeInfo> >"/>
+  <class name="MtdtimeSoA"/>
+  <class name="MtdtimeSoA::View"/>
+
+  <class name="MtdtimeHostCollection"/>
+  <class name="edm::Wrapper<MtdtimeHostCollection>" splitLevel="0"/>
 </lcgdict>

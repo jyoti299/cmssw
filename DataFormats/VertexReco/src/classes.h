@@ -14,7 +14,8 @@
 #include "DataFormats/VertexReco/interface/NuclearInteraction.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
-
+#include "DataFormats/VertexReco/interface/MtdtimeSoA.h"
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
 #include "DataFormats/VertexReco/interface/TrackTimeLifeInfo.h"
 
 #include <vector>

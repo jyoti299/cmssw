@@ -232,3 +232,61 @@ vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<edm::View<
 TransientTrack TransientTrackBuilder::build(const FreeTrajectoryState& fts) const {
   return TransientTrack(new TransientTrackFromFTS(fts));
 }
+
+
+vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<reco::TrackCollection>& trkColl,
+						    const reco::BeamSpot& beamSpot,
+                                                    const edm::ValueMap<float>& MTDtimes,
+                                                    const edm::ValueMap<float>& trackTimes,
+                                                    const edm::ValueMap<float>& trackTimeResos) const {
+  vector<TransientTrack> ttVect;
+  ttVect.reserve((*trkColl).size());
+  for (unsigned int i = 0; i < (*trkColl).size(); i++) {
+    TrackRef ref(trkColl, i);
+    double time = trackTimes[ref];
+    double timeReso = trackTimeResos[ref];
+    int trackAsoc_mtd = 1;
+    float MTDtime_mtd = 2.0;
+    float MTDtimeErr_mtd = 3.0;
+    float MVAquality_mtd = 3.0;
+    float pathLength_mtd = 3.0;
+    float btlMatch_chi2_mtd = 3.0;
+    float btlMatchTime_chi2_mtd = 3.0;
+    float etlMatch_chi2_mtd = 3.0;
+    float etlMatchTime_chi2_mtd = 3.0;
+    float trackTime_pi_mtd = 3.0;
+    float trackTime_k_mtd = 3.0;
+    float trackTime_p_mtd = 3.0;
+    float track_sigmaTime_pi_mtd = 3.0;
+    float track_sigmaTime_k_mtd = 3.0;
+    float track_sigmaTime_p_mtd = 3.0;
+
+/*    int trackAsocMTD = (*soa).const_view().trackAsocMTD()[i];
+    float MTDtime = (*soa).const_view().time()[i];
+    float MTDtimeErr = (*soa).const_view().timeErr()[i];
+    float MVAquality = (*soa).const_view().MVAquality()[i];
+    float pathLength = (*soa).const_view().pathLength()[i];
+    float btlMatch_chi2 = (*soa).const_view().btlMatch_chi2()[i];
+    float btlMatchTime_chi2 = (*soa).const_view().btlMatchTime_chi2()[i];
+    float etlMatch_chi2 = (*soa).const_view().etlMatch_chi2()[i];
+    float etlMatchTime_chi2 = (*soa).const_view().etlMatchTime_chi2()[i];
+    float trackTime_pi = (*soa).const_view().trackTime_pi()[i];
+    float trackTime_k = (*soa).const_view().trackTime_k()[i];
+    float trackTime_p = (*soa).const_view().trackTime_p()[i];
+    float track_sigmaTime_pi = (*soa).const_view().track_sigmaTime_pi()[i];
+    float track_sigmaTime_k = (*soa).const_view().track_sigmaTime_k()[i];
+    float track_sigmaTime_p = (*soa).const_view().track_sigmaTime_p()[i];
+  */  
+    timeReso = (timeReso > 1e-6 ? timeReso
+                                : defaultInvalidTrackTimeReso);  // make the error much larger than the BS time width
+    if (edm::isNotFinite(time)) {
+      time = 0.0;
+      timeReso = defaultInvalidTrackTimeReso;
+    }
+    ttVect.push_back(TransientTrack(ref, time, timeReso, theField,  theTrackingGeometry, trackAsoc_mtd, MTDtime_mtd, MTDtimeErr_mtd, MVAquality_mtd, pathLength_mtd, btlMatch_chi2_mtd, btlMatchTime_chi2_mtd, etlMatch_chi2_mtd, etlMatchTime_chi2_mtd, trackTime_pi_mtd, trackTime_k_mtd, trackTime_p_mtd, track_sigmaTime_pi_mtd, track_sigmaTime_k_mtd, track_sigmaTime_p_mtd));
+  }
+  for (unsigned int i = 0; i < ttVect.size(); i++) {
+    ttVect[i].setBeamSpot(beamSpot);
+  }
+  return ttVect;
+}

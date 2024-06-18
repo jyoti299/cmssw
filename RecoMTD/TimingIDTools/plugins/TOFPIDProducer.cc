@@ -48,9 +48,6 @@ private:
   edm::EDGetTokenT<edm::ValueMap<float>> sigmatmtdToken_;
   edm::EDGetTokenT<edm::ValueMap<float>> tofkToken_;
   edm::EDGetTokenT<edm::ValueMap<float>> tofpToken_;
-  edm::EDGetTokenT<edm::ValueMap<float>> sigmatofpiToken_;
-  edm::EDGetTokenT<edm::ValueMap<float>> sigmatofkToken_;
-  edm::EDGetTokenT<edm::ValueMap<float>> sigmatofpToken_;
   edm::EDGetTokenT<reco::VertexCollection> vtxsToken_;
   edm::EDGetTokenT<edm::ValueMap<float>> trackMTDTimeQualityToken_;
   const double vtxMaxSigmaT_;
@@ -74,9 +71,6 @@ TOFPIDProducer::TOFPIDProducer(const ParameterSet& iConfig)
       sigmatmtdToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("sigmatmtdSrc"))),
       tofkToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("tofkSrc"))),
       tofpToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("tofpSrc"))),
-      sigmatofpiToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("sigmatofpiSrc"))),
-      sigmatofkToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("sigmatofkSrc"))),
-      sigmatofpToken_(consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("sigmatofpSrc"))),
       vtxsToken_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vtxsSrc"))),
       trackMTDTimeQualityToken_(
           consumes<edm::ValueMap<float>>(iConfig.getParameter<edm::InputTag>("trackMTDTimeQualityVMapTag"))),
@@ -116,12 +110,6 @@ void TOFPIDProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptio
       ->setComment("Input ValueMap for track tof as kaon");
   desc.add<edm::InputTag>("tofpSrc", edm::InputTag("trackExtenderWithMTD:generalTrackTofP"))
       ->setComment("Input ValueMap for track tof as proton");
-  desc.add<edm::InputTag>("sigmatofpiSrc", edm::InputTag("trackExtenderWithMTD:generalTrackSigmaTofPi"))
-      ->setComment("Input ValueMap for track sigma(tof) as pion");
-  desc.add<edm::InputTag>("sigmatofkSrc", edm::InputTag("trackExtenderWithMTD:generalTrackSigmaTofK"))
-      ->setComment("Input ValueMap for track sigma(tof) as kaon");
-  desc.add<edm::InputTag>("sigmatofpSrc", edm::InputTag("trackExtenderWithMTD:generalTrackSigmaTofP"))
-      ->setComment("Input ValueMap for track sigma(tof) as proton");
   desc.add<edm::InputTag>("vtxsSrc", edm::InputTag("unsortedOfflinePrimaryVertices4DwithPID"))
       ->setComment("Input primary vertex collection");
   desc.add<edm::InputTag>("trackMTDTimeQualityVMapTag", edm::InputTag("mtdTrackQualityMVA:mtdQualMVA"))
@@ -175,12 +163,6 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
 
   const auto& tofpIn = ev.get(tofpToken_);
 
-  const auto& sigmatofpiIn = ev.get(sigmatofpiToken_);
-
-  const auto& sigmatofkIn = ev.get(sigmatofkToken_);
-
-  const auto& sigmatofpIn = ev.get(sigmatofpToken_);
-
   const auto& vtxs = ev.get(vtxsToken_);
 
   const auto& trackMVAQualIn = ev.get(trackMTDTimeQualityToken_);
@@ -203,9 +185,6 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
     float sigmat0safe = sigmat0In[trackref];
     float sigmatmtd = (sigmatmtdIn[trackref] > 0. && fixedT0Error_ > 0.) ? fixedT0Error_ : sigmatmtdIn[trackref];
     float sigmat0 = sigmatmtd;
-    float sigmatofpi = sigmatofpiIn[trackref];
-    float sigmatofk = sigmatofkIn[trackref];
-    float sigmatofp = sigmatofpIn[trackref];
 
     float prob_pi = -1.;
     float prob_k = -1.;
@@ -215,9 +194,7 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
 
     if (sigmat0 > 0. && (!MVASel_ || (MVASel_ && trackMVAQual >= minTrackTimeQuality_))) {
       double rsigmazsq = 1. / track.dzError() / track.dzError();
-      std::array<double, 3> rsigmat = {{1. / std::sqrt(sigmatmtd * sigmatmtd + sigmatofpi * sigmatofpi),
-                                        1. / std::sqrt(sigmatmtd * sigmatmtd + sigmatofk * sigmatofk),
-                                        1. / std::sqrt(sigmatmtd * sigmatmtd + sigmatofp * sigmatofp)}};
+      double rsigmat = 1. / sigmatmtd;
 
       //find associated vertex
       int vtxidx = -1;
@@ -240,7 +217,7 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
         }
         if (vtx.tError() > 0. && vtx.tError() < vtxMaxSigmaT_) {
           double dt = std::abs(t0 - vtx.t());
-          double dtsig = dt * rsigmat[0];  //pion hp. uncertainty
+          double dtsig = dt * rsigmat;
           double chisq = dz * dz * rsigmazsq + dtsig * dtsig;
           if (dz < maxDz_ && dtsig < maxDtSignificance_ && chisq < minchisq) {
             minchisq = chisq;
@@ -268,15 +245,15 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
         const reco::Vertex& vtxnom = vtxs[vtxidx];
         double dznom = std::abs(track.dz(vtxnom.position()));
         double dtnom = std::abs(t0 - vtxnom.t());
-        double dtsignom = dtnom * rsigmat[0];
+        double dtsignom = dtnom * rsigmat;
         double chisqnom = dznom * dznom * rsigmazsq + dtsignom * dtsignom;
 
         //recompute t0 for alternate mass hypotheses
         double t0_best = t0;
 
-        //reliable match, revert to raw mtd time uncertainty + tof uncertainty for pion hp
+        //reliable match, revert to raw mtd time uncertainty
         if (dtsignom < maxDtSignificance_) {
-          sigmat0safe = 1. / rsigmat[0];
+          sigmat0safe = sigmatmtd;
         }
 
         double tmtd = tmtdIn[trackref];
@@ -307,7 +284,7 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
           double chisqdz = dz * dz * rsigmazsq;
 
           double dt_k = std::abs(t0_k - vtx.t());
-          double dtsig_k = dt_k * rsigmat[1];
+          double dtsig_k = dt_k * rsigmat;
           double chisq_k = chisqdz + dtsig_k * dtsig_k;
 
           if (dtsig_k < maxDtSignificance_ && chisq_k < chisqmin_k) {
@@ -315,7 +292,7 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
           }
 
           double dt_p = std::abs(t0_p - vtx.t());
-          double dtsig_p = dt_p * rsigmat[2];
+          double dtsig_p = dt_p * rsigmat;
           double chisq_p = chisqdz + dtsig_p * dtsig_p;
 
           if (dtsig_p < maxDtSignificance_ && chisq_p < chisqmin_p) {
@@ -326,13 +303,13 @@ void TOFPIDProducer::produce(edm::Event& ev, const edm::EventSetup& es) {
             chisqmin = chisq_k;
             t0_best = t0_k;
             t0safe = t0_k;
-            sigmat0safe = 1. / rsigmat[1];
+            sigmat0safe = sigmatmtd;
           }
           if (dtsig_p < maxDtSignificance_ && chisq_p < chisqmin) {
             chisqmin = chisq_p;
             t0_best = t0_p;
             t0safe = t0_p;
-            sigmat0safe = 1. / rsigmat[2];
+            sigmat0safe = sigmatmtd;
           }
         }
 

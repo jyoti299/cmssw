@@ -55,23 +55,29 @@
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmBase.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmFromTracksPID.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/VertexTimeAlgorithmLegacy4D.h"
-
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
+#include "TracksGraph.h"
+#include "DataFormats/VertexReco/interface/MtdtimeHostCollection.h"
+#include <iostream>
+#include <vector>
 //
 // class declaration
 //
+using namespace cms::Ort;
 
-class PrimaryVertexProducer : public edm::stream::EDProducer<> {
+class PrimaryVertexProducer : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 public:
-  PrimaryVertexProducer(const edm::ParameterSet&);
+  PrimaryVertexProducer(const edm::ParameterSet&, cms::Ort::ONNXRuntime const* onnxRuntime = nullptr);
   ~PrimaryVertexProducer() override;
 
   void produce(edm::Event&, const edm::EventSetup&) override;
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-
+  std::unique_ptr<TrackGraph>  produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTrack);
   // access to config
   edm::ParameterSet config() const { return theConfig; }
-
+  static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
+  static void globalEndJob(const ONNXRuntime *);
 private:
   // ----------member data ---------------------------
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> theTTBToken;
@@ -99,13 +105,43 @@ private:
 
   edm::EDGetTokenT<reco::BeamSpot> bsToken;
   edm::EDGetTokenT<reco::TrackCollection> trkToken;
+  edm::EDGetTokenT<MtdtimeHostCollection> inputTimingToken_;
   edm::EDGetTokenT<edm::ValueMap<float> > trkTimesToken;
   edm::EDGetTokenT<edm::ValueMap<float> > trkTimeResosToken;
   edm::EDGetTokenT<edm::ValueMap<float> > trackMTDTimeQualityToken;
+  edm::EDGetTokenT<edm::ValueMap<int> > trkMTDAssocToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > MTDtimeToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > sigmaMTDtimeToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > pathLengthToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > btlMatchChi2Token;
+  edm::EDGetTokenT<edm::ValueMap<float> > btlMatchTime_Chi2Token;
+  edm::EDGetTokenT<edm::ValueMap<float> > etlMatchChi2Token;
+  edm::EDGetTokenT<edm::ValueMap<float> > etlMatchTime_Chi2Token;
+  edm::EDGetTokenT<edm::ValueMap<float> > trkTimePiToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > trkTimeKToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > trkTimePToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > sigmaTrkTimePiToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > sigmaTrkTimeKToken;
+  edm::EDGetTokenT<edm::ValueMap<float> > sigmaTrkTimePToken;
+  edm::EDGetTokenT<edm::ValueMap<int>> npixBarrelToken;
+  edm::EDGetTokenT<edm::ValueMap<int>> npixEndcapToken;
 
   bool useTransientTrackTime_;
   bool useMVASelection_;
-  edm::ValueMap<float> trackMTDTimeQualities_;
+  //edm::ValueMap<float> trackMTDTimeQualities_;
   edm::ValueMap<float> trackTimes_;
   double minTrackTimeQuality_;
+
+//  std::vector<float> features;
+//  std::vector<float> edge_features;
+
+  std::vector<float> node_degrees;
+  std::vector<float> degree_centr;
+  std::string nnVersion_;       // Version identifier of the NN (either CNN or a GNN, to choose which inputs to use)
+  double nnWorkingPoint_;       // Working point for neural network (above this score, consider the t
+  cms::Ort::ONNXRuntime const* onnxRuntime_;
+  cms::Ort::FloatArrays data;
+/*  std::vector<std::vector<int64_t>> input_shapes;
+    std::vector<float> edges_src;
+    std::vector<float> edges_dst;*/
 };

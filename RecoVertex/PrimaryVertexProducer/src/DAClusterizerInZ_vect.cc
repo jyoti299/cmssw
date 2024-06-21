@@ -179,10 +179,12 @@ DAClusterizerInZ_vect::track_t DAClusterizerInZ_vect::fill(const vector<reco::Tr
   track_t tks;
   double sumtkwt = 0.;
   for (auto it = tracks.begin(); it != tracks.end(); it++) {
+	  
     if (!(*it).isValid())
       continue;
     double t_tkwt = 1.;
     double t_z = ((*it).stateAtBeamLine().trackStateAtPCA()).position().z();
+
     if (std::fabs(t_z) > 1000.)
       continue;
     auto const& t_mom = (*it).stateAtBeamLine().trackStateAtPCA().momentum();
@@ -207,13 +209,8 @@ DAClusterizerInZ_vect::track_t DAClusterizerInZ_vect::fill(const vector<reco::Tr
     tks.addItemSorted(t_z, t_dz2, &(*it), t_tkwt);
     sumtkwt += t_tkwt;
   }
-
-  if (sumtkwt > 0) {
-    tks.extractRaw();
-    tks.osumtkwt = 1. / sumtkwt;
-  } else {
-    tks.osumtkwt = 0.;
-  }
+  tks.extractRaw();
+  tks.osumtkwt = sumtkwt > 0 ? 1. / sumtkwt : 0.;
 
 #ifdef DEBUG
   if (DEBUGLEVEL > 0) {
@@ -772,12 +769,13 @@ bool DAClusterizerInZ_vect::split(const double beta, track_t& tks, vertex_t& y, 
 
 vector<TransientVertex> DAClusterizerInZ_vect::vertices_no_blocks(const vector<reco::TransientTrack>& tracks) const {
   track_t&& tks = fill(tracks);
-  vector<TransientVertex> clusters;
-  if (tks.getSize() == 0)
-    return clusters;
   tks.extractRaw();
 
   double rho0 = 0.0;  // start with no outlier rejection
+
+  vector<TransientVertex> clusters;
+  if (tks.getSize() == 0)
+    return clusters;
 
   vertex_t y;  // the vertex prototypes
 
@@ -930,6 +928,7 @@ vector<TransientVertex> DAClusterizerInZ_vect::vertices_no_blocks(const vector<r
 
 vector<TransientVertex> DAClusterizerInZ_vect::vertices_in_blocks(const vector<reco::TransientTrack>& tracks) const {
   vector<reco::TransientTrack> sorted_tracks;
+   std::cout <<" In vertices_in_blocks 1111 in DA_Z function "<<std::endl;
   vector<pair<float, float>> vertices_tot;  // z, rho for each vertex
   for (unsigned int i = 0; i < tracks.size(); i++) {
     sorted_tracks.push_back(tracks[i]);
@@ -941,6 +940,7 @@ vector<TransientVertex> DAClusterizerInZ_vect::vertices_in_blocks(const vector<r
               return (a.stateAtBeamLine().trackStateAtPCA()).position().z() <
                      (b.stateAtBeamLine().trackStateAtPCA()).position().z();
             });
+      std::cout <<" In vertices_in_blocks in DA_Z function "<<std::endl;
 
   unsigned int nBlocks = (unsigned int)std::floor(sorted_tracks.size() / (block_size_ * (1 - overlap_frac_)));
   if (nBlocks < 1) {
@@ -1332,6 +1332,7 @@ vector<TransientVertex> DAClusterizerInZ_vect::fill_vertices(double beta, double
 }
 
 vector<TransientVertex> DAClusterizerInZ_vect::vertices(const vector<reco::TransientTrack>& tracks) const {
+ std::cout <<" In vertices in DA_Z function "<<std::endl;	
   if (runInBlocks_ and (block_size_ < tracks.size()))  //doesn't bother if low number of tracks
     return vertices_in_blocks(tracks);
   else
@@ -1339,7 +1340,9 @@ vector<TransientVertex> DAClusterizerInZ_vect::vertices(const vector<reco::Trans
 }
 
 vector<vector<reco::TransientTrack>> DAClusterizerInZ_vect::clusterize(  // OBSOLETE
-    const vector<reco::TransientTrack>& tracks) const {
+  
+  const vector<reco::TransientTrack>& tracks) const {
+	std::cout <<" In clusterize in DA_Z function "<<std::endl;
   vector<vector<reco::TransientTrack>> clusters;
   vector<TransientVertex>&& pv = vertices(tracks);
 

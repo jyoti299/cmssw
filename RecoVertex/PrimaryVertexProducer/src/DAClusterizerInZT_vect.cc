@@ -207,14 +207,12 @@ DAClusterizerInZT_vect::track_t DAClusterizerInZT_vect::fill(const vector<reco::
   // prepare track data for clustering
   track_t tks;
   double sumtkwt = 0.;
-
   for (const auto& tk : tracks) {
     if (!tk.isValid())
       continue;
     double t_tkwt = 1.;
     double t_z = tk.stateAtBeamLine().trackStateAtPCA().position().z();
     double t_t = tk.timeExt();
-
     if (std::fabs(t_z) > 1000.)
       continue;
     /*  for comparison with 1d clustering, keep such tracks without timing info, see below
@@ -234,7 +232,6 @@ DAClusterizerInZT_vect::track_t DAClusterizerInZT_vect::fill(const vector<reco::
       edm::LogWarning("DAClusterizerinZT_vect") << "rejected track t_dz2 " << t_dz2;
       continue;
     }
-
     double t_dt2 =
         std::pow(tk.dtErrorExt(), 2.) +
         std::pow(vertexSizeTime_, 2.);  // the ~injected~ timing error, need to add a small minimum vertex size in time
@@ -262,12 +259,8 @@ DAClusterizerInZT_vect::track_t DAClusterizerInZT_vect::fill(const vector<reco::
     sumtkwt += t_tkwt;
   }
 
-  if (sumtkwt > 0) {
-    tks.extractRaw();
-    tks.osumtkwt = 1. / sumtkwt;
-  } else {
-    tks.osumtkwt = 0.;
-  }
+  tks.extractRaw();
+  tks.osumtkwt = sumtkwt > 0 ? 1. / sumtkwt : 0.;
 
 #ifdef DEBUG
   if (DEBUGLEVEL > 0) {
@@ -1112,14 +1105,16 @@ bool DAClusterizerInZT_vect::split(const double beta, track_t& tks, vertex_t& y,
 }
 
 vector<TransientVertex> DAClusterizerInZT_vect::vertices(const vector<reco::TransientTrack>& tracks) const {
+std::cout <<" In vertices in DA_ZT function "<<std::endl;	
   track_t&& tks = fill(tracks);
-  vector<TransientVertex> clusters;
-  if (tks.getSize() == 0)
-    return clusters;
   tks.extractRaw();
 
   unsigned int nt = tks.getSize();
   double rho0 = 0.0;  // start with no outlier rejection
+
+  vector<TransientVertex> clusters;
+  if (tks.getSize() == 0)
+    return clusters;
 
   vertex_t y;  // the vertex prototypes
 
@@ -1357,7 +1352,7 @@ vector<vector<reco::TransientTrack> > DAClusterizerInZT_vect::clusterize(
     const vector<reco::TransientTrack>& tracks) const {
   vector<vector<reco::TransientTrack> > clusters;
   vector<TransientVertex>&& pv = vertices(tracks);
-
+  std::cout <<" In clusterize in DA_ZT function "<<std::endl;
 #ifdef DEBUG
   if (DEBUGLEVEL > 0) {
     std::cout << "###################################################" << endl;

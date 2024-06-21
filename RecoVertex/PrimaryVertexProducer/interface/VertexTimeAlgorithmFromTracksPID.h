@@ -21,7 +21,7 @@ public:
 protected:
   struct TrackInfo {
     double trkWeight;
-    double trkTimeErrorHyp[3];
+    double trkTimeError;
     double trkTimeHyp[3];
   };
 
@@ -31,9 +31,6 @@ protected:
   edm::EDGetTokenT<edm::ValueMap<float>> const trackMTDTofPiToken_;
   edm::EDGetTokenT<edm::ValueMap<float>> const trackMTDTofKToken_;
   edm::EDGetTokenT<edm::ValueMap<float>> const trackMTDTofPToken_;
-  edm::EDGetTokenT<edm::ValueMap<float>> const trackMTDSigmaTofPiToken_;
-  edm::EDGetTokenT<edm::ValueMap<float>> const trackMTDSigmaTofKToken_;
-  edm::EDGetTokenT<edm::ValueMap<float>> const trackMTDSigmaTofPToken_;
 
   double const minTrackVtxWeight_;
   double const minTrackTimeQuality_;
@@ -49,9 +46,6 @@ protected:
   edm::ValueMap<float> trackMTDTofPi_;
   edm::ValueMap<float> trackMTDTofK_;
   edm::ValueMap<float> trackMTDTofP_;
-  edm::ValueMap<float> trackMTDSigmaTofPi_;
-  edm::ValueMap<float> trackMTDSigmaTofK_;
-  edm::ValueMap<float> trackMTDSigmaTofP_;
 };
 
 #endif

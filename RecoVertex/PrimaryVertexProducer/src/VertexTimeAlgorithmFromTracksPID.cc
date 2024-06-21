@@ -23,9 +23,6 @@ VertexTimeAlgorithmFromTracksPID::VertexTimeAlgorithmFromTracksPID(edm::Paramete
       trackMTDTofPiToken_(iCC.consumes(iConfig.getParameter<edm::InputTag>("trackMTDTofPiVMapTag"))),
       trackMTDTofKToken_(iCC.consumes(iConfig.getParameter<edm::InputTag>("trackMTDTofKVMapTag"))),
       trackMTDTofPToken_(iCC.consumes(iConfig.getParameter<edm::InputTag>("trackMTDTofPVMapTag"))),
-      trackMTDSigmaTofPiToken_(iCC.consumes(iConfig.getParameter<edm::InputTag>("trackMTDSigmaTofPiVMapTag"))),
-      trackMTDSigmaTofKToken_(iCC.consumes(iConfig.getParameter<edm::InputTag>("trackMTDSigmaTofKVMapTag"))),
-      trackMTDSigmaTofPToken_(iCC.consumes(iConfig.getParameter<edm::InputTag>("trackMTDSigmaTofPVMapTag"))),
       minTrackVtxWeight_(iConfig.getParameter<double>("minTrackVtxWeight")),
       minTrackTimeQuality_(iConfig.getParameter<double>("minTrackTimeQuality")),
       probPion_(iConfig.getParameter<double>("probPion")),
@@ -49,12 +46,6 @@ void VertexTimeAlgorithmFromTracksPID::fillPSetDescription(edm::ParameterSetDesc
       ->setComment("Input ValueMap for track tof as kaon");
   iDesc.add<edm::InputTag>("trackMTDTofPVMapTag", edm::InputTag("trackExtenderWithMTD:generalTrackTofP"))
       ->setComment("Input ValueMap for track tof as proton");
-  iDesc.add<edm::InputTag>("trackMTDSigmaTofPiVMapTag", edm::InputTag("trackExtenderWithMTD:generalTrackSigmaTofPi"))
-      ->setComment("Input ValueMap for track tof uncertainty as pion");
-  iDesc.add<edm::InputTag>("trackMTDSigmaTofKVMapTag", edm::InputTag("trackExtenderWithMTD:generalTrackSigmaTofK"))
-      ->setComment("Input ValueMap for track tof uncertainty as kaon");
-  iDesc.add<edm::InputTag>("trackMTDSigmaTofPVMapTag", edm::InputTag("trackExtenderWithMTD:generalTrackSigmaTofP"))
-      ->setComment("Input ValueMap for track tof uncertainty as proton");
 
   iDesc.add<double>("minTrackVtxWeight", 0.5)->setComment("Minimum track weight");
   iDesc.add<double>("minTrackTimeQuality", 0.8)->setComment("Minimum MVA Quality selection on tracks");
@@ -75,9 +66,6 @@ void VertexTimeAlgorithmFromTracksPID::setEvent(edm::Event& iEvent, edm::EventSe
   trackMTDTofPi_ = iEvent.get(trackMTDTofPiToken_);
   trackMTDTofK_ = iEvent.get(trackMTDTofKToken_);
   trackMTDTofP_ = iEvent.get(trackMTDTofPToken_);
-  trackMTDSigmaTofPi_ = iEvent.get(trackMTDSigmaTofPiToken_);
-  trackMTDSigmaTofK_ = iEvent.get(trackMTDSigmaTofKToken_);
-  trackMTDSigmaTofP_ = iEvent.get(trackMTDSigmaTofPToken_);
 }
 
 bool VertexTimeAlgorithmFromTracksPID::vertexTime(float& vtxTime,
@@ -114,36 +102,23 @@ bool VertexTimeAlgorithmFromTracksPID::vertexTime(float& vtxTime,
         auto& trkInfo = v_trackInfo.back();
 
         trkInfo.trkWeight = trkWeight;
-        trkInfo.trkTimeErrorHyp[0] =
-            std::sqrt(trkTimeError * trkTimeError +
-                      trackMTDSigmaTofPi_[trk.trackBaseRef()] * trackMTDSigmaTofPi_[trk.trackBaseRef()]);
-        trkInfo.trkTimeErrorHyp[1] =
-            std::sqrt(trkTimeError * trkTimeError +
-                      trackMTDSigmaTofK_[trk.trackBaseRef()] * trackMTDSigmaTofK_[trk.trackBaseRef()]);
-        trkInfo.trkTimeErrorHyp[2] =
-            std::sqrt(trkTimeError * trkTimeError +
-                      trackMTDSigmaTofP_[trk.trackBaseRef()] * trackMTDSigmaTofP_[trk.trackBaseRef()]);
+        trkInfo.trkTimeError = trkTimeError;
 
         trkInfo.trkTimeHyp[0] = trkTime - trackMTDTofPi_[trk.trackBaseRef()];
         trkInfo.trkTimeHyp[1] = trkTime - trackMTDTofK_[trk.trackBaseRef()];
         trkInfo.trkTimeHyp[2] = trkTime - trackMTDTofP_[trk.trackBaseRef()];
 
-        double const wgt[3] = {trkWeight / (trkInfo.trkTimeErrorHyp[0] * trkInfo.trkTimeErrorHyp[0]),
-                               trkWeight / (trkInfo.trkTimeErrorHyp[1] * trkInfo.trkTimeErrorHyp[1]),
-                               trkWeight / (trkInfo.trkTimeErrorHyp[2] * trkInfo.trkTimeErrorHyp[2])};
+        auto const wgt = trkWeight / (trkTimeError * trkTimeError);
+        wsum += wgt;
 
         for (uint j = 0; j < 3; ++j) {
-          wsum += wgt[j] * a[j];
-          tsum += wgt[j] * a[j] * trkInfo.trkTimeHyp[j];
+          tsum += wgt * trkInfo.trkTimeHyp[j] * a[j];
         }
-
         LOG << "vertexTimeFromTracks:     track"
             << " pt=" << trk.track().pt() << " eta=" << trk.track().eta() << " phi=" << trk.track().phi()
             << " vtxWeight=" << trkWeight << " time=" << trkTime << " timeError=" << trkTimeError
-            << " timeQuality=" << trkTimeQuality << " timeHyp[pion]=" << trkInfo.trkTimeHyp[0] << " +/- "
-            << trkInfo.trkTimeErrorHyp[0] << " timeHyp[kaon]=" << trkInfo.trkTimeHyp[1] << " +/- "
-            << trkInfo.trkTimeErrorHyp[1] << " timeHyp[proton]=" << trkInfo.trkTimeHyp[2] << " +/- "
-            << trkInfo.trkTimeErrorHyp[2];
+            << " timeQuality=" << trkTimeQuality << " timeHyp[pion]=" << trkInfo.trkTimeHyp[0]
+            << " timeHyp[kaon]=" << trkInfo.trkTimeHyp[1] << " timeHyp[proton]=" << trkInfo.trkTimeHyp[2];
       }
     }
   }
@@ -157,29 +132,27 @@ bool VertexTimeAlgorithmFromTracksPID::vertexTime(float& vtxTime,
       w2sum = 0;
 
       for (auto const& trkInfo : v_trackInfo) {
-        double dt[3] = {trkInfo.trkTimeErrorHyp[0], trkInfo.trkTimeErrorHyp[1], trkInfo.trkTimeErrorHyp[2]};
+        double dt = trkInfo.trkTimeError;
         double e[3] = {0, 0, 0};
         const double cut_off = 4.5;
         double Z = vdt::fast_exp(
             -beta * cut_off);  // outlier rejection term Z_0 = exp(-beta * cut_off) = exp(-beta * 0.5 * 3 * 3)
-
         for (unsigned int j = 0; j < 3; j++) {
-          auto const tpull = (trkInfo.trkTimeHyp[j] - t0) / dt[j];
+          auto const tpull = (trkInfo.trkTimeHyp[j] - t0) / dt;
           e[j] = vdt::fast_exp(-0.5 * beta * tpull * tpull);
           Z += a[j] * e[j];
         }
 
-        double wsum_trk = 0, wsum_sigma_trk = 0;
+        double wsum_trk = 0;
         for (uint j = 0; j < 3; j++) {
           double wt = a[j] * e[j] / Z;
-          double w = wt * trkInfo.trkWeight / (dt[j] * dt[j]);
+          double w = wt * trkInfo.trkWeight / (dt * dt);
           wsum_trk += w;
-          wsum_sigma_trk += w * dt[j];
           tsum += w * trkInfo.trkTimeHyp[j];
         }
 
         wsum += wsum_trk;
-        w2sum += wsum_sigma_trk * wsum_sigma_trk;
+        w2sum += wsum_trk * wsum_trk * (dt * dt) / trkInfo.trkWeight;
       }
 
       if (wsum < 1e-10) {

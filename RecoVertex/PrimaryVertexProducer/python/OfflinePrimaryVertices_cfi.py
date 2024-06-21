@@ -6,6 +6,7 @@ offlinePrimaryVertices = cms.EDProducer(
     verbose = cms.untracked.bool(False),
     TrackLabel = cms.InputTag("generalTracks"),
     beamSpotLabel = cms.InputTag("offlineBeamSpot"),
+    timingSoA = cms.InputTag("mtdSoA"),
 
     TkFilterParameters = cms.PSet(
         algorithm=cms.string('filter'),

@@ -37,11 +37,13 @@ std::unordered_map<DNNVersion, std::pair<std::vector<std::string>, int>> dnnInpu
     {DNNVersion::MLP_NO_EDGE_FEATURES, {{"features", "edge_index"}, FEATURE_SHAPE_MLP}}
 };
 
-PrimaryVertexProducer::PrimaryVertexProducer(const edm::ParameterSet& conf, cms::Ort::ONNXRuntime const *onnxRuntime)
-    : theTTBToken(esConsumes(edm::ESInputTag("", "TransientTrackBuilder"))), theConfig(conf) {
+//PrimaryVertexProducer::PrimaryVertexProducer(const edm::ParameterSet& conf, cms::Ort::ONNXRuntime const *onnxRuntime)
+PrimaryVertexProducer::PrimaryVertexProducer(const edm::ParameterSet& conf, const ONNXRuntime *cache) 
+   : theTTBToken(esConsumes(edm::ESInputTag("", "TransientTrackBuilder"))), theConfig(conf) {
   fVerbose = conf.getUntrackedParameter<bool>("verbose", false);
   useMVASelection_ = conf.getParameter<bool>("useMVACut");
   nnVersion_ = conf.getParameter<std::string>("nnVersion");
+  nnWorkingPoint_ = conf.getParameter<double>("nnWorkingPoint");
   trkToken = consumes<reco::TrackCollection>(conf.getParameter<edm::InputTag>("TrackLabel"));
   bsToken = consumes<reco::BeamSpot>(conf.getParameter<edm::InputTag>("beamSpotLabel"));
   useTransientTrackTime_ = false;
@@ -70,7 +72,7 @@ PrimaryVertexProducer::PrimaryVertexProducer(const edm::ParameterSet& conf, cms:
     theTrackClusterizer = new DAClusterizerInZT_vect(
         conf.getParameter<edm::ParameterSet>("TkClusParameters").getParameter<edm::ParameterSet>("TkDAClusParameters"));
     useTransientTrackTime_ = true;
-  } else {
+     } else {
     throw VertexException("PrimaryVertexProducer: unknown clustering algorithm: " + clusteringAlgorithm);
   }
 
@@ -193,8 +195,8 @@ PrimaryVertexProducer::~PrimaryVertexProducer() {
   }
 }
 
-std::unique_ptr<ONNXRuntime> PrimaryVertexProducer::initializeGlobalCache(const edm::ParameterSet &iConfig) {
-  return std::make_unique<ONNXRuntime>(iConfig.getParameter<edm::FileInPath>("onnxModelPath").fullPath());
+std::unique_ptr<ONNXRuntime> PrimaryVertexProducer::initializeGlobalCache(const edm::ParameterSet &conf) {
+  return std::make_unique<ONNXRuntime>(conf.getParameter<edm::FileInPath>("onnxModelPath").fullPath());
 }
 
 void PrimaryVertexProducer::globalEndJob(const ONNXRuntime *cache) {}
@@ -202,16 +204,31 @@ void PrimaryVertexProducer::globalEndJob(const ONNXRuntime *cache) {}
 // can shift this function to TracksGraph.h as well
 std::unique_ptr<TrackGraph>  PrimaryVertexProducer::produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTracks) {
     std::vector<Node> allNodes;
-    for (size_t i = 0; i < transientTracks.size(); ++i) {
-              Node tNode(i);
-          allNodes.push_back(tNode);
+//    for (size_t i = 0; i < transientTracks.size(); ++i) {
+  for (size_t i = 0; i < 5000 ; ++i) {  
+    Node tNode(i);
+    const reco::TransientTrack& ttrack_node = transientTracks[i];
+  //  for (size_t j = i + 1; j < transientTracks.size(); ++j) {
+    for (size_t j = i + 1; j < 5000; ++j) {    
+    const reco::TransientTrack& ttrack = transientTracks[j];
+        double neighbour_cut = std::abs(ttrack_node.track().vz() - ttrack.track().vz());
+        if (neighbour_cut < 0.3 ) {
+          tNode.addInner(j);
     }
+  }
+    allNodes.push_back(tNode);
+  }
      auto resultGraph = std::make_unique<TrackGraph>(allNodes);
 
     return resultGraph;
 }
 void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup) {
   // get the BeamSpot, it will always be needed, even when not used as a constraint
+
+  std::cout<<" Did we reach here 6666*** "<<std::endl;
+  resultTracks.clear();
+  //outTrack.clear();
+  linkedTrackIdToInputTrackId.clear();
 
   reco::BeamSpot beamSpot;
   edm::Handle<reco::BeamSpot> recoBeamSpotHandle;
@@ -326,7 +343,7 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
   std::vector<reco::TransientTrack> t_tks;
   edm::Handle<MtdtimeHostCollection> inputTiming_h;
 
-
+  std::cout<<" Did we reach here 333*** "<<std::endl;
   if (useTransientTrackTime_) {
     auto const& trackTimeResos_ = iEvent.get(trkTimeResosToken);
     auto trackTimes_ = iEvent.get(trkTimesToken);
@@ -350,7 +367,6 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     iEvent.getByToken(inputTimingToken_, inputTiming_h);
 
     auto const &inputTimingView = (*inputTiming_h).const_view();
-    std::cout <<" if we are in here "<<std::endl;
 
     if (useMVASelection_) {
    //   trackMTDTimeQualities_ = iEvent.get(trackMTDTimeQualityToken);
@@ -370,14 +386,14 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     t_tks = (*theB).build(tks, beamSpot);
   }
 
-  long int N = t_tks.size();
-    std::cout<<" How many N "<<N<<std::endl;
+  long int N = 5000; //t_tks.size();
+    std::cout<<" How many N "<<t_tks.size()<<std::endl;
   if (useTransientTrackTime_) {
-
+  std::cout<<" Did we reach here 77777*** "<<std::endl; 
     auto trackgraph = produce_tracks_graph(t_tks);
     TrackGraph *trkgrp = trackgraph.get();
-    
-   for (size_t i = 0; i < t_tks.size() ; ++i) {
+   for (size_t i =0; i < 5000; ++i){ 
+ //  for (size_t i = 0; i < t_tks.size() ; ++i) {
         //float trackMTD = ttrack1.trackAsocMTD();
         const reco::TransientTrack& ttrack1 = t_tks[i];
         float trackpt = ttrack1.track().pt();
@@ -431,8 +447,9 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
       //  features.push_back(sigmaTime_pi);
       //  features.push_back(sigmaTime_k);
 
-   //for (size_t j = i + 1; j < t_tks.size(); ++j) {
-    for (auto &j : trkgrp->getNode(i).getInner()){
+for (size_t j = i + 1; j < 5000; ++j){
+//   for (size_t j = i + 1; j < t_tks.size(); ++j) {
+  //  for (auto &j : trkgrp->getNode(i).getInner()){
         const reco::TransientTrack& ttrack2 = t_tks[j];
 
 
@@ -470,6 +487,20 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
    }
   }
    auto numEdges = static_cast<int>(edges_src.size());
+   if (numEdges < 1) {
+	   std::cout<<" Did we reach here 2222*** "<<std::endl;
+       edm::LogPrint("PrimaryVertexProducer")  << "No edges for the event - no linking is done." << std::endl;
+        linkedTrackIdToInputTrackId.resize(N);
+        std::vector<unsigned int> linkedTracks;
+
+        for (int track_id = 0; track_id < N; track_id++)
+        {
+            linkedTrackIdToInputTrackId[track_id].push_back(track_id);
+	    resultTracks.push_back(t_tks[track_id]);
+            linkedTracks.push_back(resultTracks.size());
+        }
+	std::cout<<" No linking resultTracks "<<resultTracks.size()<<std::endl;
+    }
     data.clear();
 
     input_shapes.push_back({1, N, shapeFeatures});
@@ -483,40 +514,70 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     input_shapes.push_back({1, numEdges, NUM_EDGE_FEATURES});
     data.emplace_back(edge_features);
  
-// ****************just to print things  
- std::vector<float> &group_data = data[0];
- for (size_t i = 0; i < 10; i++){
-      group_data[i] = float(iEvent.id().event() % 100 + i);
-  } 
-    std::cout << "input data -> ";
-    for (auto &i: group_data) { std::cout << i << " "; }
+// run prediction
+// std::vector<float> edge_predictions = globalCache()->run(input_names, data, input_shapes)[0];
+ if (numEdges >=1 ) {
+ auto edge_predictions = globalCache()->run(input_names, data, input_shapes)[0];
+ // edm::LogPrint("PrimaryVertexProducer")  << "Network output shape is " << edge_predictions.size() << std::endl;
 
-     std::cout << "^^^^^^^^^^^^^^^Input Shapes:" << std::endl;
-    for (size_t i = 0; i < input_shapes.size(); ++i) {
-        std::cout << "Shape " << i << ": {";
-        for (size_t j = 0; j < input_shapes[i].size(); ++j) {
-            std::cout << input_shapes[i][j];
-            if (j < input_shapes[i].size() - 1) {
-                std::cout << ", ";
-            }
-        }
-        std::cout << "}" << std::endl;
+
+  // Update graph weights
+    for (int i = 0; i < static_cast<int>(edge_predictions.size()); i++){
+   //        edm::LogPrint("PrimaryVertexProducer") << "Network output for edge " << data[1][i] << "-" << data[1][numEdges + i] << " is: " << edge_predictions[i] << std::endl;
+            trkgrp->setEdgeWeight(data[1][i], data[1][numEdges + i], edge_predictions[i]);
     }
 
-// run prediction
- std::vector<float> edge_predictions = globalCache()->run(input_names, data, input_shapes)[0];
- std::cout<<" &&&&&&&&&&&&&&& Something happening here in after the EdgePredictions*********************"<<std::endl;
- } //TransientTrack time loop 
+    auto connected_components = trkgrp->findSubComponents(nnWorkingPoint_);
+    std::cout<<" nnWorkingPoint_ "<<nnWorkingPoint_<<std::endl; 
+    int id = 0;
+    
+    linkedTrackIdToInputTrackId.resize(connected_components.size());
+    std::cout<<" connected_components.size() "<<connected_components.size()<<std::endl; 
+    for (auto &component : connected_components)
+    {
+        std::vector<unsigned int> linkedTracks;
+      //  std::vector<reco::TransientTrack> outTrack;
+	TrackCollection outTrack;
+        for (auto &track_id : component)
+        {
+        //edm::LogPrint("PrimaryVertexProducer") << "Component " << id << ": trackster id " << track_id << std::endl;
+            linkedTrackIdToInputTrackId[id].push_back(track_id);
+         // outTrack.push_back(t_tks[track_id]);
+        outTrack.addItem(t_tks[track_id]);
+        }
+    std::cout << "Component " << id << ": " << outTrack.tracks.size() << " tracks added to outTrack." << std::endl;	 
+        id++;
+        linkedTracks.push_back(resultTracks.size());
+	for (const auto& track : outTrack.tracks) {
+        resultTracks.push_back(track);
+    }
+	    std::cout << "Total tracks in resultTracks after component " << id << ": " << resultTracks.size() << std::endl;
+   }
+std::cout<<"result Tracks "<<resultTracks.size()<<std::endl;
+////****************************
+ }// loop for numEdges 
+/*for (size_t k =0; k < resultTracks.size() ; k++) {
+//	for (size_t j = 0; j < resultTracks[k].size(); ++j) {
+    std::cout<<" resultTracks[k] pT "<<resultTracks[k].track().pt()<<std::endl; //" and time hypo "<<resultTracks[k].trackTime_pi()<<std::endl;  
+} */
+} //TransientTrack time loop 
+ 
 
-  // select tracks
-  std::vector<reco::TransientTrack>&& seltks = theTrackFilter->select(t_tks);
+// select tracks
 
+  std::vector<reco::TransientTrack> seltks;
+if (useTransientTrackTime_) {
+    seltks = theTrackFilter->select(resultTracks);
+} else {
+    seltks = theTrackFilter->select(t_tks);
+}
+ //std::vector<reco::TransientTrack>&& seltks = theTrackFilter->select(t_tks);
+ 
   // clusterize tracks in Z
   std::vector<TransientVertex>&& clusters = theTrackClusterizer->vertices(seltks);
- std::cout<<" Are we here in primaryVertexProducer "<<std::endl;
   if (fVerbose) {
     edm::LogPrint("PrimaryVertexProducer")
-        << "Clustering returned " << clusters.size() << " clusters from " << seltks.size() << " selected tracks";
+        << " bool useTransientTrackTime_ "<<useTransientTrackTime_<<" Clustering returned " << clusters.size() << " clusters from " << seltks.size() << " selected tracks";
   }
 
   // vertex fits
@@ -524,7 +585,6 @@ void PrimaryVertexProducer::produce(edm::Event& iEvent, const edm::EventSetup& i
     auto result = std::make_unique<reco::VertexCollection>();
     reco::VertexCollection& vColl = (*result);
     std::vector<TransientVertex> pvs;
- std::cout<<" Are we here 2222 in primaryVertexProducer "<<std::endl;
     if (algorithm->pv_fitter == nullptr) {
       pvs = clusters;
     } else {
@@ -602,7 +662,7 @@ std::cout<<" ARe we here 333 in primaryVertexProducer "<<std::endl;
         }
       }
     }
-
+    std::cout<<"Puuting the result in iEvent"<<std::endl;
     iEvent.put(std::move(result), algorithm->label);
   }
 }
@@ -699,7 +759,9 @@ void PrimaryVertexProducer::fillDescriptions(edm::ConfigurationDescriptions& des
   desc.add<edm::InputTag>("npixBarrelSrc", edm::InputTag("trackExtenderWithMTD", "npixBarrel"));
   desc.add<edm::InputTag>("npixEndcapSrc", edm::InputTag("trackExtenderWithMTD", "npixEndcap"));
   desc.add<std::string>("nnVersion", "gnn_v1") // gnn_v1, mlp_no_edge_features, mlp_edge_features
-        ->setComment("DNN version tag.");
+        ->setComment("GNN version tag.");
+   desc.add<double>("nnWorkingPoint", 0.49)
+        ->setComment("Working point of the GNN (in [0, 1]). GNN score above WP will attempt to supercluster.");
   {
     edm::ParameterSetDescription psd0;
     {

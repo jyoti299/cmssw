@@ -15,7 +15,7 @@ using namespace std;
 
 //#define DEBUG
 #ifdef DEBUG
-#define DEBUGLEVEL 0
+#define DEBUGLEVEL 1
 #endif
 
 DAClusterizerInZT_vect::DAClusterizerInZT_vect(const edm::ParameterSet& conf) {
@@ -1119,6 +1119,7 @@ std::cout <<" In vertices in DA_ZT function "<<std::endl;
   vertex_t y;  // the vertex prototypes
 
   // initialize:single vertex at infinite temperature
+  std::cout<<" DA_ZT function v1 "<<std::endl;
   y.addItem(0, 0, 1.0);
   clear_vtx_range(tks, y);
 
@@ -1128,7 +1129,7 @@ std::cout <<" In vertices in DA_ZT function "<<std::endl;
   if (DEBUGLEVEL > 0)
     std::cout << "Beta0 is " << beta << std::endl;
 #endif
-
+  
   thermalize(beta, tks, y, delta_highT_, 0.);
 
   // annealing loop, stop when T<minT  (i.e. beta>1/minT)

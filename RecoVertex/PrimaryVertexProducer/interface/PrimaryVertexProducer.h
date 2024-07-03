@@ -67,7 +67,8 @@ using namespace cms::Ort;
 
 class PrimaryVertexProducer : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 public:
-  PrimaryVertexProducer(const edm::ParameterSet&, cms::Ort::ONNXRuntime const* onnxRuntime = nullptr);
+ // PrimaryVertexProducer(const edm::ParameterSet&, cms::Ort::ONNXRuntime const* onnxRuntime = nullptr);
+  PrimaryVertexProducer(const edm::ParameterSet&, const ONNXRuntime*);
   ~PrimaryVertexProducer() override;
 
   void produce(edm::Event&, const edm::EventSetup&) override;
@@ -76,8 +77,29 @@ public:
   std::unique_ptr<TrackGraph>  produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTrack);
   // access to config
   edm::ParameterSet config() const { return theConfig; }
-  static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
-  static void globalEndJob(const ONNXRuntime *);
+  static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet&);
+  static void globalEndJob(const ONNXRuntime*);
+
+
+  struct TrackCollection {
+    std::vector<reco::TransientTrack> tracks;
+/*
+    void mergeTracks(const std::vector<reco::TransientTrack>& others) {
+        for (const auto& other : others) {
+            if (!tracks.empty()) {
+                tracks[0] += other; // Example: merging into the first track
+            } else {
+                tracks.push_back(other); // If empty, add the first track
+            }
+        }
+    }*/
+    void addItem(const reco::TransientTrack& new_tt) {
+        tracks.push_back(new_tt);
+    }
+};
+
+
+
 private:
   // ----------member data ---------------------------
   const edm::ESGetToken<TransientTrackBuilder, TransientTrackRecord> theTTBToken;
@@ -141,7 +163,8 @@ private:
   double nnWorkingPoint_;       // Working point for neural network (above this score, consider the t
   cms::Ort::ONNXRuntime const* onnxRuntime_;
   cms::Ort::FloatArrays data;
-/*  std::vector<std::vector<int64_t>> input_shapes;
-    std::vector<float> edges_src;
-    std::vector<float> edges_dst;*/
+  std::vector<std::vector<unsigned int>> linkedTrackIdToInputTrackId;
+  //std::vector<std::vector<reco::TransientTrack>> resultTracks;
+  std::vector<unsigned int> linkedTracks;
+  std::vector<reco::TransientTrack> resultTracks;
 };

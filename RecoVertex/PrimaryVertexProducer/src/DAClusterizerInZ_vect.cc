@@ -14,7 +14,7 @@ using namespace std;
 
 //#define DEBUG
 #ifdef DEBUG
-#define DEBUGLEVEL 0
+#define DEBUGLEVEL 1
 #endif
 
 DAClusterizerInZ_vect::DAClusterizerInZ_vect(const edm::ParameterSet& conf) {
@@ -768,6 +768,7 @@ bool DAClusterizerInZ_vect::split(const double beta, track_t& tks, vertex_t& y, 
 }
 
 vector<TransientVertex> DAClusterizerInZ_vect::vertices_no_blocks(const vector<reco::TransientTrack>& tracks) const {
+std::cout<<" DACluster_Z in vertices_no_blocks "<<std::endl;
   track_t&& tks = fill(tracks);
   tks.extractRaw();
 
@@ -927,8 +928,8 @@ vector<TransientVertex> DAClusterizerInZ_vect::vertices_no_blocks(const vector<r
 }
 
 vector<TransientVertex> DAClusterizerInZ_vect::vertices_in_blocks(const vector<reco::TransientTrack>& tracks) const {
+std::cout<<" DACluster_Z in vertices_in_blocks "<<std::endl;
   vector<reco::TransientTrack> sorted_tracks;
-   std::cout <<" In vertices_in_blocks 1111 in DA_Z function "<<std::endl;
   vector<pair<float, float>> vertices_tot;  // z, rho for each vertex
   for (unsigned int i = 0; i < tracks.size(); i++) {
     sorted_tracks.push_back(tracks[i]);
@@ -940,7 +941,6 @@ vector<TransientVertex> DAClusterizerInZ_vect::vertices_in_blocks(const vector<r
               return (a.stateAtBeamLine().trackStateAtPCA()).position().z() <
                      (b.stateAtBeamLine().trackStateAtPCA()).position().z();
             });
-      std::cout <<" In vertices_in_blocks in DA_Z function "<<std::endl;
 
   unsigned int nBlocks = (unsigned int)std::floor(sorted_tracks.size() / (block_size_ * (1 - overlap_frac_)));
   if (nBlocks < 1) {
@@ -1245,6 +1245,7 @@ vector<TransientVertex> DAClusterizerInZ_vect::fill_vertices(double beta, double
 
   set_vtx_range(beta, tks, y);
   const unsigned int nv = y.getSize();
+  std::cout<<" y size nv "<<nv<<std::endl;
   for (unsigned int k = 0; k < nv; k++) {
     if (edm::isNotFinite(y.rho[k]) || edm::isNotFinite(y.zvtx[k])) {
       y.rho[k] = 0;
@@ -1257,6 +1258,8 @@ vector<TransientVertex> DAClusterizerInZ_vect::fill_vertices(double beta, double
   const auto z_sum_init = rho0 * local_exp(-beta * dzCutOff_ * dzCutOff_);
   std::vector<std::vector<unsigned int>> vtx_track_indices(nv);
   std::vector<std::vector<float>> vtx_track_weights(nv);
+// This loop calculates the assignment probability for each vertex.  If the maximum assignment probability pmax is greater than a threshold (mintrkweight_), the track is assigned to the vertex with the highest assignment probability (k_pmax). 
+
   for (unsigned int i = 0; i < nt; i++) {
     const auto kmin = tks.kmin[i];
     const auto kmax = tks.kmax[i];
@@ -1312,6 +1315,7 @@ vector<TransientVertex> DAClusterizerInZ_vect::fill_vertices(double beta, double
         j++;
       }
       float zerror_squared = 1.;  //
+      // here below we are updating the z position of the vertex 
       if ((sumw > 0) && (sumwp > 0)) {
         zerror_squared = sumwp / (sumw * sumw);
         y.zvtx[k] = sumwz / sumw;
@@ -1330,6 +1334,7 @@ vector<TransientVertex> DAClusterizerInZ_vect::fill_vertices(double beta, double
 
   return clusters;
 }
+
 
 vector<TransientVertex> DAClusterizerInZ_vect::vertices(const vector<reco::TransientTrack>& tracks) const {
  std::cout <<" In vertices in DA_Z function "<<std::endl;	

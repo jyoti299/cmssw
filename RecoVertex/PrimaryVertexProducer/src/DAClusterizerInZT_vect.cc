@@ -1104,8 +1104,8 @@ bool DAClusterizerInZT_vect::split(const double beta, track_t& tks, vertex_t& y,
   return split;
 }
 
+
 vector<TransientVertex> DAClusterizerInZT_vect::vertices(const vector<reco::TransientTrack>& tracks) const {
-std::cout <<" In vertices in DA_ZT function "<<std::endl;	
   track_t&& tks = fill(tracks);
   tks.extractRaw();
 
@@ -1119,7 +1119,6 @@ std::cout <<" In vertices in DA_ZT function "<<std::endl;
   vertex_t y;  // the vertex prototypes
 
   // initialize:single vertex at infinite temperature
-  std::cout<<" DA_ZT function v1 "<<std::endl;
   y.addItem(0, 0, 1.0);
   clear_vtx_range(tks, y);
 
@@ -1353,7 +1352,6 @@ vector<vector<reco::TransientTrack> > DAClusterizerInZT_vect::clusterize(
     const vector<reco::TransientTrack>& tracks) const {
   vector<vector<reco::TransientTrack> > clusters;
   vector<TransientVertex>&& pv = vertices(tracks);
-  std::cout <<" In clusterize in DA_ZT function "<<std::endl;
 #ifdef DEBUG
   if (DEBUGLEVEL > 0) {
     std::cout << "###################################################" << endl;

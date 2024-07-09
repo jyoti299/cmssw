@@ -10,7 +10,6 @@ class Node {
 public:
   Node() = default;
   Node(unsigned index, bool isTrack = true) : index_(index), isTrack_(isTrack), alreadyVisited_{false}{};
- // this track_id for us is the for loop on the transientTracks  
   void addInner(unsigned int track_id) { innerNodes_.push_back(track_id); addNeighbour(track_id);}
   void addOuter(unsigned int track_id) { outerNodes_.push_back(track_id); addNeighbour(track_id);}
   void addNeighbour(unsigned int track_id, double weight = 0.0) {
@@ -21,7 +20,6 @@ public:
   void updateWeight(unsigned int neighborIndex, float weight) {
         // Find the neighbor index in the list of neighbors
         auto it = std::find(neighboursId_.begin(), neighboursId_.end(), neighborIndex);
-	//std::cout<<" iterator it "<<it<<" and neighbor Index "<<neighborIndex<<std::endl;
         if (it != neighboursId_.end()) {
             // Update the weight if the neighbor is found
             size_t index = std::distance(neighboursId_.begin(), it);
@@ -43,16 +41,13 @@ public:
       // Using a const iterator since we don't intend to modify elements
       auto neighbourIt = neighboursId_.cbegin(); // Iterator for neighboursId_
       auto weightIt = weights_.cbegin(); // Iterator for weights_
-      std::cout << "Visiting node: " << index_ << std::endl;      
       // Loop through both vectors simultaneously
       for (; neighbourIt != neighboursId_.cend() && weightIt != weights_.cend(); ++neighbourIt, ++weightIt) {
           int neighbour = *neighbourIt;
 
           double weight = *weightIt;
           if (weight >= threshold){
-		  std::cout<<" In the threshold consition loop "<<neighbour<<" weight "<<weight<<std::endl;
-            
-     std::cout << "Node " << index_ << " -> Neighbour " << neighbour << " with weight " << weight << std::endl;   
+              //edm::LogPrint("PrimaryVertexProducer")  << "Node " << index_ << " -> Neighbour " << neighbour << " with weight " << weight ;   
     graph[neighbour].findSubComponents(graph, subComponent, threshold);
 	    //graph[0].findSubComponents(graph, subComponent, threshold) will start the DFS from node 0, identifying all connected nodes that meet the weight threshold and storing their indices in subComponent.
           }
@@ -105,7 +100,7 @@ public:
         nodes_[nodeIndexJ].updateWeight(nodeIndexI, weight);
   }
 
-  std::vector<std::vector<unsigned int>> findSubComponents(float threshold) {
+    std::vector<std::vector<unsigned int>> findSubComponents(float threshold) {
     std::vector<std::vector<unsigned int>> components;
 for (auto& node : nodes_) {
             node.setAlreadyVisited(false);
@@ -137,7 +132,7 @@ for (auto& node : nodes_) {
     }
   }
 
-  std::vector<std::vector<unsigned int>> getConnectedComponents() const {
+    std::vector<std::vector<unsigned int>> getConnectedComponents() const {
     std::unordered_set<unsigned int> visited;
     std::vector<std::vector<unsigned int>> components;
 

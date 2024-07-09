@@ -75,6 +75,7 @@ vector<TransientVertex> GapClusterizerInZ::vertices(const vector<reco::Transient
   return primary_vertices;
 }
 
+
 void GapClusterizerInZ::fillPSetDescription(edm::ParameterSetDescription& desc) {
   desc.add<double>("zSeparation", 1.0);
   desc.addUntracked<bool>("verbose", false);

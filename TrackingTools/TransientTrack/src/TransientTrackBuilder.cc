@@ -280,22 +280,6 @@ vector<TransientTrack> TransientTrackBuilder::build(const edm::Handle<reco::Trac
     int npixEndcap = tracknpixEndcap[ref];
 
 
-/*    int trackAsocMTD = (*soa).const_view().trackAsocMTD()[i];
-    float MTDtime = (*soa).const_view().time()[i];
-    float MTDtimeErr = (*soa).const_view().timeErr()[i];
-    float MVAquality = (*soa).const_view().MVAquality()[i];
-    float pathLength = (*soa).const_view().pathLength()[i];
-    float btlMatch_chi2 = (*soa).const_view().btlMatch_chi2()[i];
-    float btlMatchTime_chi2 = (*soa).const_view().btlMatchTime_chi2()[i];
-    float etlMatch_chi2 = (*soa).const_view().etlMatch_chi2()[i];
-    float etlMatchTime_chi2 = (*soa).const_view().etlMatchTime_chi2()[i];
-    float trackTime_pi = (*soa).const_view().trackTime_pi()[i];
-    float trackTime_k = (*soa).const_view().trackTime_k()[i];
-    float trackTime_p = (*soa).const_view().trackTime_p()[i];
-    float track_sigmaTime_pi = (*soa).const_view().track_sigmaTime_pi()[i];
-    float track_sigmaTime_k = (*soa).const_view().track_sigmaTime_k()[i];
-    float track_sigmaTime_p = (*soa).const_view().track_sigmaTime_p()[i];
-  */  
     timeReso = (timeReso > 1e-6 ? timeReso
                                 : defaultInvalidTrackTimeReso);  // make the error much larger than the BS time width
     if (edm::isNotFinite(time)) {

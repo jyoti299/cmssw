@@ -266,7 +266,6 @@ public:
       const std::vector<reco::TransientTrack> &tracks) const override;
 
   std::vector<TransientVertex> vertices(const std::vector<reco::TransientTrack> &tracks) const override;
-
   track_t fill(const std::vector<reco::TransientTrack> &tracks) const;
 
   void set_vtx_range(double beta, track_t &gtracks, vertex_t &gvertices) const;

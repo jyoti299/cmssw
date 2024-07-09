@@ -164,7 +164,9 @@ private:
   cms::Ort::ONNXRuntime const* onnxRuntime_;
   cms::Ort::FloatArrays data;
   std::vector<std::vector<unsigned int>> linkedTrackIdToInputTrackId;
-  //std::vector<std::vector<reco::TransientTrack>> resultTracks;
+  std::vector<std::vector<reco::TransientTrack>> resultTracks;
   std::vector<unsigned int> linkedTracks;
-  std::vector<reco::TransientTrack> resultTracks;
+  std::vector<std::vector<reco::TransientTrack>> seltks;
+  std::vector<TransientVertex> clusters_time;
+  std::vector<TransientVertex> clusters;
 };

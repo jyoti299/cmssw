@@ -513,9 +513,9 @@ for (size_t j = i + 1; j < 5000; ++j){
   // Update graph weights
     for (int i = 0; i < static_cast<int>(edge_predictions.size()); i++){
    
-   if  (fVerbose) { 
+  /* if  (fVerbose) { 
 	    edm::LogPrint("PrimaryVertexProducer") << "Network output for edge " << data[1][i] << "-" << data[1][numEdges + i] << " is: " << edge_predictions[i];
-       }
+       }*/
             trkgrp->setEdgeWeight(data[1][i], data[1][numEdges + i], edge_predictions[i]);
     }
 
@@ -639,10 +639,10 @@ for (size_t j = i + 1; j < 5000; ++j){
       pvs = clusters;
     } else {
       if (useTransientTrackTime_) {
-	      for (const auto& tracks : seltks) {
-            // Fit using tracks (vector of reco::TransientTrack)
-            pvs = algorithm->pv_fitter->fit(tracks, clusters, beamSpot, algorithm->useBeamConstraint);
-        }
+	    //  for (const auto& tracks : seltks) {
+            		      
+            pvs = algorithm->pv_fitter->fit(filterTracks, clusters_time, beamSpot, algorithm->useBeamConstraint);
+        //}
      // pvs = algorithm->pv_fitter->fit(seltks, clusters, beamSpot, algorithm->useBeamConstraint);
       }
        else {

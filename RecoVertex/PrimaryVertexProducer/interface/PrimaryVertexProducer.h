@@ -35,7 +35,7 @@
 #include "RecoVertex/PrimaryVertexProducer/interface/TrackClusterizerInZ.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/DAClusterizerInZ_vect.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/DAClusterizerInZT_vect.h"
-
+#include "RecoVertex/PrimaryVertexProducer/interface/ClusterizerinGNN.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/TrackFilterForPVFinding.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/HITrackFilterForPVFinding.h"
 #include "RecoVertex/PrimaryVertexProducer/interface/GapClusterizerInZ.h"
@@ -67,38 +67,17 @@ using namespace cms::Ort;
 
 class PrimaryVertexProducer : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 public:
- // PrimaryVertexProducer(const edm::ParameterSet&, cms::Ort::ONNXRuntime const* onnxRuntime = nullptr);
   PrimaryVertexProducer(const edm::ParameterSet&, const ONNXRuntime*);
   ~PrimaryVertexProducer() override;
 
   void produce(edm::Event&, const edm::EventSetup&) override;
 
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-  std::unique_ptr<TrackGraph>  produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTrack);
   // access to config
   edm::ParameterSet config() const { return theConfig; }
+
   static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet&);
   static void globalEndJob(const ONNXRuntime*);
-
-
-  struct TrackCollection {
-    std::vector<reco::TransientTrack> tracks;
-/*
-    void mergeTracks(const std::vector<reco::TransientTrack>& others) {
-        for (const auto& other : others) {
-            if (!tracks.empty()) {
-                tracks[0] += other; // Example: merging into the first track
-            } else {
-                tracks.push_back(other); // If empty, add the first track
-            }
-        }
-    }*/
-    void addItem(const reco::TransientTrack& new_tt) {
-        tracks.push_back(new_tt);
-    }
-};
-
-
 
 private:
   // ----------member data ---------------------------
@@ -154,19 +133,4 @@ private:
   edm::ValueMap<float> trackTimes_;
   double minTrackTimeQuality_;
 
-//  std::vector<float> features;
-//  std::vector<float> edge_features;
-
-  std::vector<float> node_degrees;
-  std::vector<float> degree_centr;
-  std::string nnVersion_;       // Version identifier of the NN (either CNN or a GNN, to choose which inputs to use)
-  double nnWorkingPoint_;       // Working point for neural network (above this score, consider the t
-  cms::Ort::ONNXRuntime const* onnxRuntime_;
-  cms::Ort::FloatArrays data;
-  std::vector<std::vector<unsigned int>> linkedTrackIdToInputTrackId;
-  std::vector<std::vector<reco::TransientTrack>> resultTracks;
-  std::vector<unsigned int> linkedTracks;
-  std::vector<std::vector<reco::TransientTrack>> seltks;
-  std::vector<TransientVertex> clusters_time;
-  std::vector<TransientVertex> clusters;
 };

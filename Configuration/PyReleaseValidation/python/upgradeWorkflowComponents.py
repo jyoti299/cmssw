@@ -2033,6 +2033,15 @@ upgradeWFs['HLT75e33'] = UpgradeWorkflow_HLT75e33(
     offset = 0.75,
 )
 
+upgradeWFs['HLTTiming75e33TiclV5'] = deepcopy(upgradeWFs['HLTTiming75e33'])
+upgradeWFs['HLTTiming75e33TiclV5'].suffix = '_HLT75e33TimingTiclV5'
+upgradeWFs['HLTTiming75e33TiclV5'].offset = 0.752
+upgradeWFs['HLTTiming75e33TiclV5'].step2 = {
+    '-s':'DIGI:pdigi_valid,L1TrackTrigger,L1,L1P2GT,DIGI2RAW,HLT:75e33_timing',
+    '--procModifiers': 'ticl_v5'
+}
+
+
 class UpgradeWorkflow_HLTwDIGI75e33(UpgradeWorkflow):
     def setup_(self, step, stepName, stepDict, k, properties):
         if 'DigiTrigger' in step:

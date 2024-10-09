@@ -10,12 +10,13 @@
 #include <iomanip>
 #include "FWCore/Utilities/interface/isFinite.h"
 #include "vdt/vdtMath.h"
-
+#include <TH1F.h>
+#include <TCanvas.h>
+#include "TFile.h"
 using namespace std;
-
-const int FEATURE_SHAPE_GNN_V1 = 21;
-const int FEATURE_SHAPE_MLP = 30;
-const int NUM_EDGE_FEATURES = 12;
+const int FEATURE_SHAPE_GNN_V1 = 2;
+const int FEATURE_SHAPE_MLP = 2;
+const int NUM_EDGE_FEATURES = 2;
 enum class DNNVersion {
     GNN_V1,
     MLP_EDGE_FEATURES,
@@ -61,7 +62,10 @@ std::unique_ptr<ONNXRuntime> ClusterizerinGNN::initializeGlobalCache(const edm::
 }
 std::unique_ptr<TrackGraph>  ClusterizerinGNN::produce_tracks_graph(const std::vector<reco::TransientTrack>& transientTracks) const {
     std::vector<Node> allNodes;
-    for (size_t i = 0; i < transientTracks.size(); ++i) {
+
+
+/*    for (size_t i = 0; i < transientTracks.size(); ++i) {
+	    
     Node tNode(i);
     const reco::TransientTrack& ttrack_node = transientTracks[i];
    for (size_t j = i + 1; j < transientTracks.size(); ++j) {
@@ -72,7 +76,40 @@ std::unique_ptr<TrackGraph>  ClusterizerinGNN::produce_tracks_graph(const std::v
     }
   }
     allNodes.push_back(tNode);
-  }
+  }*/
+    for (size_t i = 0; i < transientTracks.size(); ++i) {
+	    const reco::TransientTrack& ttrack_node = transientTracks[i];
+	    float zPosition = ttrack_node.track().vz();
+        allNodes.emplace_back(i, zPosition);  // Create a new Node with index i
+    }
+    for (size_t i = 0; i < transientTracks.size(); ++i) {
+        const reco::TransientTrack& ttrack_node = transientTracks[i];
+
+        for (size_t j = i + 1; j < transientTracks.size(); ++j) {
+            const reco::TransientTrack& ttrack = transientTracks[j];
+
+            double neighbour_cut = std::abs(ttrack_node.track().vz() - ttrack.track().vz());
+            if (neighbour_cut < 0.3) {
+                // Add inner connections between i and j
+                allNodes[i].addInner(j);  // Track i adds track j as an inner node
+                allNodes[j].addInner(i);   // Track j adds track i as an inner node
+
+            }
+        }
+    }
+    /*
+     for (const auto& node : allNodes) {
+        std::cout << "Checking connections for Node " << node.getId() << ":\n";
+        for (const auto& neighbor : node.getNeighbours()) {
+            // Verify bidirectional connection
+            if (allNodes[neighbor].isConnected(node.getId())) {
+                std::cout << "  Node " << neighbor << " is connected back to Node " << node.getId() << " (bidirectional).\n";
+            } else {
+                std::cout << "  Node " << neighbor << " is NOT connected back to Node " << node.getId() << " (not bidirectional).\n";
+            }
+        }
+    }
+*/
      auto resultGraph = std::make_unique<TrackGraph>(allNodes);
 
     return resultGraph;
@@ -89,6 +126,7 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
     std::vector<std::vector<int64_t>> input_shapes;
     std::vector<float> edges_src;
     std::vector<float> edges_dst;
+   TH1F* h_zDiff = new TH1F("h_zDiff", "Z-Difference Histogram", 50, 0, 0.5);
 
 // *************************************
    DNNVersion versionEnum = DNN_VERSION_MAP[nnVersion_];
@@ -142,11 +180,14 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
         float sigmaTime_p = ttrack1.sigma_time_p();
 
 	//Variables we have in model : pt, eta, phi, z_pca, t_pi, t_k, t_p, mva, btl*4, path lenght, npixBarrel, npix Ebdcap, mtdtime, sigma mtdtime, dz, sigma tof_p, trk_ndof, trk_chi2
-        features.push_back(trackpt);
-        features.push_back(tracketa);
-        features.push_back(trackphi);
+        //features.push_back(trackpt);
+        //features.push_back(tracketa);
+        //features.push_back(trackphi);
+
         features.push_back(trackvz);
-        features.push_back(Time_pi_hypo);
+        features.push_back(track_dzError);
+
+        /*features.push_back(Time_pi_hypo);
         features.push_back(Time_k_hypo);
         features.push_back(Time_p_hypo);
         features.push_back(mvaquality);
@@ -163,13 +204,14 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
         features.push_back(sigmaTime_p);
         features.push_back(track_ndof);
         features.push_back(track_chi2);
-
+*/
+	        int node_degree = trkgrp->getNode(i).getInner().size();
     for (auto &j : trkgrp->getNode(i).getInner()){
         const reco::TransientTrack& ttrack2 = tracks[j];
 
 
-        double neighbour_cut = std::abs(ttrack1.track().vz() - ttrack2.track().vz());
-        if (neighbour_cut < 0.3 ) {
+      //  double neighbour_cut = std::abs(ttrack1.track().vz() - ttrack2.track().vz());
+       // if (neighbour_cut < 0.3 ) {
         edges_src.push_back(static_cast<float>(j)); // this should be neighbour of the track 
         edges_dst.push_back(static_cast<float>(i));
 
@@ -186,10 +228,10 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
         float time_p_pi_diff = std::abs(ttrack1.trackTime_p() - ttrack2.trackTime_pi());
         float time_p_k_diff = std::abs(ttrack1.trackTime_p() - ttrack2.trackTime_k());	
 
-        edge_features.push_back(pt_diff);
+      //  edge_features.push_back(pt_diff);
          edge_features.push_back(zpca_diff);
          edge_features.push_back(dz_sign);
-         edge_features.push_back(time_pi_diff);
+        /* edge_features.push_back(time_pi_diff);
          edge_features.push_back(time_k_diff);
          edge_features.push_back(time_p_diff);
          edge_features.push_back(time_pi_k_diff);
@@ -197,8 +239,8 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
          edge_features.push_back(time_k_pi_diff);
          edge_features.push_back(time_k_p_diff);
          edge_features.push_back(time_p_k_diff);
-         edge_features.push_back(time_p_pi_diff);
-    } // if neighbour loop 
+         edge_features.push_back(time_p_pi_diff);*/
+  //  } // if neighbour loop 
    } // loop for edges 
   } // loop for transient tracks
    auto numEdges = static_cast<int>(edges_src.size());
@@ -224,17 +266,33 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
     }
     input_shapes.push_back({1, numEdges, NUM_EDGE_FEATURES});
     data.emplace_back(edge_features);
+
+    /*for (int i = 0; i < numEdges; ++i) {
+    std::cout << "Edge " << i << ": Source = " << data[1][i] << ", Destination = " << data[1][numEdges + i] << std::endl;
+}
+*/
 // run prediction
  if (numEdges >=1 ) {
     auto edge_predictions = onnxRuntime_->run(input_names, data, input_shapes)[0];
-
   // Update graph weights
     for (int i = 0; i < static_cast<int>(edge_predictions.size()); i++){
-
             trkgrp->setEdgeWeight(data[1][i], data[1][numEdges + i], edge_predictions[i]);
     }
-    auto connected_components = trkgrp->findSubComponents(nnWorkingPoint_);
+    auto connected_components = trkgrp->findSubComponents(nnWorkingPoint_, h_zDiff);
+    //auto connected_components =  trkgrp->getConnectedComponents(nnWorkingPoint_);
+    // *****
+    h_zDiff->GetXaxis()->SetTitle("z-difference [cm]");
+    h_zDiff->GetYaxis()->SetTitle("Number of occurrences");
+
+    // Optionally, write the histogram to a ROOT file
+    TFile outFile("histograms.root", "RECREATE");
+    h_zDiff->Write();
+    outFile.Close();
+    
+    
+    //****
     int id = 0;
+    std::cout<<" connected_components size "<<connected_components.size()<<std::endl;
     std::vector<TrackCollection> outTracks; 
     linkedTrackIdToInputTrackId.resize(connected_components.size());
     for (auto &component : connected_components)
@@ -264,6 +322,7 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
     std::vector<double> zpca;
     std::vector<double> t_tkwt;
     std::vector<double> t_dz2;
+ 
  for (unsigned int k =0; k < nv; k++) {
     double sumwz = 0;
     double sumwt = 0;
@@ -275,6 +334,7 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
     zpca.resize(tracks_sel.size());
     t_tkwt.resize(tracks_sel.size());
     t_dz2.resize(tracks_sel.size());
+    if (tracks_sel.size() > 1) {
      for (size_t index = 0; index < tracks_sel.size(); ++index)  {
      const auto &track = tracks_sel[index];
       if (d0CutOff_ > 0) {
@@ -307,9 +367,10 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
       sumw_z += w_z;
       sumw_t += w_t;
     }
+    }  
     zvtx[k] = sumwz / sumw_z;
  }
-
+ 
 
   GlobalError dummyError(0.01, 0, 0.01, 0., 0., 0.01);
     for (unsigned int k = 0; k < nv; k++) {
@@ -346,7 +407,7 @@ void ClusterizerinGNN::fillPSetDescription(edm::ParameterSetDescription& desc) {
   DAClusterizerInZ_vect::fillPSetDescription(desc);	
   desc.add<double>("zSeparation", 1.0);
   desc.addUntracked<bool>("verbose", false);
-  desc.add<edm::FileInPath>("onnxModelPath", edm::FileInPath("RecoVertex/PrimaryVertexProducer/data/model_v6version24June.onnx"))->setComment("Path to GNN (as ONNX model)");
+  desc.add<edm::FileInPath>("onnxModelPath", edm::FileInPath("RecoVertex/PrimaryVertexProducer/data/model_v6version_PULV_TTbarPU_4Oct_bidirection_th0p1.onnx"))->setComment("Path to GNN (as ONNX model)");
   desc.add<std::string>("nnVersion", "gnn_v1") // gnn_v1, mlp_no_edge_features, mlp_edge_features
         ->setComment("GNN version tag.");
    desc.add<double>("nnWorkingPoint", 0.80)

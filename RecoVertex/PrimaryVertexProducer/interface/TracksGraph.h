@@ -5,18 +5,18 @@
 #include <unordered_set>
 #include <vector>
 
-
 class Node {
 public:
   Node() = default;
-  Node(unsigned index, bool isTrack = true) : index_(index), isTrack_(isTrack), alreadyVisited_{false}{};
+  Node(unsigned index, float zPosition , bool isTrack = true)  : index_(index), zPosition_(zPosition), isTrack_(isTrack), alreadyVisited_(false) {}; 
   void addInner(unsigned int track_id) { innerNodes_.push_back(track_id); addNeighbour(track_id);}
-  void addOuter(unsigned int track_id) { outerNodes_.push_back(track_id); addNeighbour(track_id);}
   void addNeighbour(unsigned int track_id, double weight = 0.0) {
     neighboursId_.push_back(track_id);
     weights_.push_back(weight);
   }
-  
+   float getZPosition() const{
+     return zPosition_;
+ } 
   void updateWeight(unsigned int neighborIndex, float weight) {
         // Find the neighbor index in the list of neighbors
         auto it = std::find(neighboursId_.begin(), neighboursId_.end(), neighborIndex);
@@ -30,9 +30,7 @@ public:
 
   const unsigned int getId() const { return index_; }
   std::vector<unsigned int> getNeighbours() const { return neighboursId_; }
-  std::vector<float> getWeights() const { return weights_; }
   std::vector<unsigned int> getInner() const { return innerNodes_; }
-  std::vector<unsigned int> getOuter() const { return outerNodes_; }
   
   void findSubComponents(std::vector<Node>& graph, std::vector<unsigned int>& subComponent, float threshold) {
     if (!alreadyVisited_) {
@@ -47,7 +45,6 @@ public:
 
           double weight = *weightIt;
           if (weight >= threshold){
-              //edm::LogPrint("PrimaryVertexProducer")  << "Node " << index_ << " -> Neighbour " << neighbour << " with weight " << weight ;   
     graph[neighbour].findSubComponents(graph, subComponent, threshold);
 	    //graph[0].findSubComponents(graph, subComponent, threshold) will start the DFS from node 0, identifying all connected nodes that meet the weight threshold and storing their indices in subComponent.
           }
@@ -67,13 +64,12 @@ public:
 
 private:
   unsigned index_;
-  
+  float zPosition_; 
   bool isTrack_;
 
   std::vector<unsigned int> neighboursId_;
   std::vector<float> weights_;
   std::vector<unsigned int> innerNodes_;
-  std::vector<unsigned int> outerNodes_;
   bool alreadyVisited_;
 
   //bool areCompatible(const std::vector<Node>& graph, const unsigned int& outerNode) { return true; };
@@ -119,33 +115,6 @@ for (auto& node : nodes_) {
 
   ~TrackGraph() = default;
 
-  void dfsForCC(unsigned int nodeIndex,
-                std::unordered_set<unsigned int>& visited,
-                std::vector<unsigned int>& component) const {
-    visited.insert(nodeIndex);
-    component.push_back(nodeIndex);
-
-    for (auto const& neighbourIndex : nodes_[nodeIndex].getNeighbours()) {
-      if (visited.find(neighbourIndex) == visited.end()) {
-        dfsForCC(neighbourIndex, visited, component);
-      }
-    }
-  }
-
-    std::vector<std::vector<unsigned int>> getConnectedComponents() const {
-    std::unordered_set<unsigned int> visited;
-    std::vector<std::vector<unsigned int>> components;
-
-    for (unsigned int i = 0; i < nodes_.size(); ++i) {
-      if (visited.find(i) == visited.end()) {
-        std::vector<unsigned int> component;
-        dfsForCC(i, visited, component);
-        components.push_back(component);
-      }
-    }
-
-    return components;
-  }
 
 private:
   std::vector<Node> nodes_;

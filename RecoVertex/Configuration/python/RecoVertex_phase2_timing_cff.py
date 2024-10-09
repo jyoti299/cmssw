@@ -7,6 +7,7 @@ unsortedOfflinePrimaryVertices4D = unsortedOfflinePrimaryVertices.clone(
             Tmin = cms.double(4.0),
             Tpurge = cms.double(4.0),
             Tstop = cms.double(2.0),
+            nnWorkingPoint = cms.double(0.99),
         )
     ),
     TrackTimesLabel = cms.InputTag("trackTimeValueMapProducer","generalTracksConfigurableFlatResolutionModel"),

@@ -55,7 +55,7 @@ public:
 
 private:
   void analyze(const edm::Event&, const edm::EventSetup&) override;
-
+  void branchesGNN(TTree* tree);
   const edm::Ref<std::vector<TrackingParticle>>* getAnyMatchedTP(const reco::TrackBaseRef&);
   double timeFromTrueMass(double, double, double, double);
 
@@ -382,7 +382,6 @@ void MVATrainingNtuple::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
     std::string GNNtreeName = "GNNtree_" + std::to_string(iEvent.id().event());
     TTree* GNNtree = fs_->make<TTree>(GNNtreeName.c_str(), "Tree for GNN tracks");
-
     GNNtree->Branch("gnn_pt", &gnn_pt);
     GNNtree->Branch("gnn_eta", &gnn_eta);
     GNNtree->Branch("gnn_phi", &gnn_phi);
@@ -467,15 +466,19 @@ void MVATrainingNtuple::analyze(const edm::Event& iEvent, const edm::EventSetup&
     gnn_sim_vertex_LV_dz.clear();
     gnn_sim_vertex_isLV.clear();
 
+
+
     // build TransientTracks
     t_tks = (*theB).build(tracksH, beamSpot, t0Safe, sigmat0Safe);
 
     // track filter
     std::vector<reco::TransientTrack>&& seltks = theTrackFilter->select(t_tks);
-   
+    size_t newSize = seltks.size();
+   std::cout<<" seltks size "<<seltks.size()<<" gnn_sim_vertex_evID "<<gnn_sim_vertex_evID.size()<<std::endl; 
+            
     for (std::vector<reco::TransientTrack>::const_iterator itk = seltks.begin(); itk != seltks.end(); itk++) {
         reco::TrackBaseRef trackref = (*itk).trackBaseRef();
-
+        double z_i = (*itk).track().vz();
         gnn_pt.push_back((*itk).track().pt());
         gnn_eta.push_back((*itk).track().eta());
         gnn_phi.push_back((*itk).track().phi());
@@ -515,13 +518,13 @@ void MVATrainingNtuple::analyze(const edm::Event& iEvent, const edm::EventSetup&
            double anytp_mass = (*anytp_info)->mass();
            gnn_tp_tEst.push_back(timeFromTrueMass(anytp_mass, pathLength[trackref], momentum[trackref], tMtd[trackref]));
            gnn_tp_pdgId.push_back(std::abs((*anytp_info)->pdgId()));
-
+ 
 	   TrackingVertexRef parentVertexRef = (*anytp_info)->parentVertex();
-
 	   // Loop on TV Collection to retrive info on sim vertices
            for (const auto& vsim : simpv) {
                if (vsim.sim_vertex == parentVertexRef) {
-                   // Found the matching simPrimaryVertex
+
+                   //Found the matching simPrimaryVertex
 		   gnn_sim_vertex_z.push_back(vsim.z);
                    gnn_sim_vertex_t.push_back(vsim.t * simUnit_);
                    gnn_sim_vertex_evID.push_back(vsim.eventId);
@@ -529,15 +532,23 @@ void MVATrainingNtuple::analyze(const edm::Event& iEvent, const edm::EventSetup&
                    gnn_sim_vertex_index.push_back(vsim.key);
 		   gnn_sim_vertex_isLV.push_back(vsim.is_LV);
                    gnn_sim_vertex_LV_dz.push_back(vsim.LV_distance_z);
-               }
-           }
-
+                   
+              }
+	    }	   
 	}else{
            gnn_is_matched_tp.push_back(false);
-        }
-
+	   gnn_sim_vertex_z.push_back(-999.);
+           gnn_sim_vertex_t.push_back(-999.);
+           gnn_sim_vertex_evID.push_back(-999.);
+           gnn_sim_vertex_BX.push_back(-999.);
+           gnn_sim_vertex_index.push_back(-999.);
+           gnn_sim_vertex_isLV.push_back(false);
+           gnn_sim_vertex_LV_dz.push_back(-999.);
+           gnn_tp_tEst.push_back(-999.);
+	   gnn_tp_pdgId.push_back(-999.);		   
+  
+      }
     } // loop on sel tracks
-
     GNNtree->Fill();
 
   } // ntuple for GNN

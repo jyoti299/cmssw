@@ -18,13 +18,13 @@ process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:phase2_realistic_T33', ''
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
 
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("output_ntuple.root"),
+    fileName = cms.string("output_ntuplev2.root"),
     closeFileFast = cms.untracked.bool(True)
 )
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-                               'file:step3.root'
+                               'file:/gpfs/cms/users/jbabbar/work/VertexProd/CMSSW_14_1_0_pre6/work/TTbar_PU/246b9af9-570e-42e4-b188-7e96e65b2832.root'
                             )
 )
 

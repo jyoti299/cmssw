@@ -55,7 +55,6 @@ public:
 
 private:
   void analyze(const edm::Event&, const edm::EventSetup&) override;
-  void branchesGNN(TTree* tree);
   const edm::Ref<std::vector<TrackingParticle>>* getAnyMatchedTP(const reco::TrackBaseRef&);
   double timeFromTrueMass(double, double, double, double);
 
@@ -382,6 +381,7 @@ void MVATrainingNtuple::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
     std::string GNNtreeName = "GNNtree_" + std::to_string(iEvent.id().event());
     TTree* GNNtree = fs_->make<TTree>(GNNtreeName.c_str(), "Tree for GNN tracks");
+
     GNNtree->Branch("gnn_pt", &gnn_pt);
     GNNtree->Branch("gnn_eta", &gnn_eta);
     GNNtree->Branch("gnn_phi", &gnn_phi);
@@ -466,19 +466,14 @@ void MVATrainingNtuple::analyze(const edm::Event& iEvent, const edm::EventSetup&
     gnn_sim_vertex_LV_dz.clear();
     gnn_sim_vertex_isLV.clear();
 
-
-
     // build TransientTracks
     t_tks = (*theB).build(tracksH, beamSpot, t0Safe, sigmat0Safe);
 
     // track filter
     std::vector<reco::TransientTrack>&& seltks = theTrackFilter->select(t_tks);
-    size_t newSize = seltks.size();
-   std::cout<<" seltks size "<<seltks.size()<<" gnn_sim_vertex_evID "<<gnn_sim_vertex_evID.size()<<std::endl; 
             
     for (std::vector<reco::TransientTrack>::const_iterator itk = seltks.begin(); itk != seltks.end(); itk++) {
         reco::TrackBaseRef trackref = (*itk).trackBaseRef();
-        double z_i = (*itk).track().vz();
         gnn_pt.push_back((*itk).track().pt());
         gnn_eta.push_back((*itk).track().eta());
         gnn_phi.push_back((*itk).track().phi());

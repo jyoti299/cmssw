@@ -17,7 +17,6 @@
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 #include "TracksGraph.h"
-
 #include <memory>
 
 using namespace cms::Ort;
@@ -285,7 +284,9 @@ private:
   double vertexSize_;
   const ONNXRuntime* onnxRuntime_;
   std::string nnVersion_;       // Version identifier of the NN (either CNN or a GNN, to choose which inputs to use)
+  std::string AlgoVersion_;
   double nnWorkingPoint_;       // Working point for neural network (above this score, consider the t
+  int minPts_;
  // cms::Ort::FloatArrays data;
  // std::vector<std::vector<unsigned int>> linkedTrackIdToInputTrackId;
   std::vector<std::vector<reco::TransientTrack>> resultTracks;

@@ -33,6 +33,8 @@ DAClusterizerInZT_vect::DAClusterizerInZT_vect(const edm::ParameterSet& conf) {
   double minT = conf.getParameter<double>("Tmin");
   double purgeT = conf.getParameter<double>("Tpurge");
   double stopT = conf.getParameter<double>("Tstop");
+  double nnWorkingPoint_ = conf.getParameter<double>("nnWorkingPoint"); 
+  int minPts_ = conf.getParameter<int>("minPts");
   vertexSize_ = conf.getParameter<double>("vertexSize");
   vertexSizeTime_ = conf.getParameter<double>("vertexSizeTime");
   coolingFactor_ = conf.getParameter<double>("coolingFactor");
@@ -1567,4 +1569,8 @@ void DAClusterizerInZT_vect::fillPSetDescription(edm::ParameterSetDescription& d
   desc.add<double>("dtCutOff", 4.);           // 4D only
   desc.add<double>("t0Max", 1.0);             // 4D only
   desc.add<double>("vertexSizeTime", 0.008);  // 4D only
+  desc.add<double>("nnWorkingPoint", 0.80)
+        ->setComment("Working point of the GNN (in [0, 1]). This is not needed for DA2D");
+   desc.add<int>("minPts", 4)
+        ->setComment("MinPts for DBSCAN. This is not needed for DA2D");
 }

@@ -21,7 +21,16 @@ enum class DNNVersion {
     MLP_EDGE_FEATURES,
     MLP_NO_EDGE_FEATURES
 };
-
+enum class ClusterAlgo {
+    DFS,
+    DBSCAN_improvised,
+    DBSCAN
+};
+std::unordered_map<std::string, ClusterAlgo> algoMap = {
+    {"dfsAlgo", ClusterAlgo::DFS},
+    {"dbscan_impro", ClusterAlgo::DBSCAN_improvised},
+    {"dbscan", ClusterAlgo::DBSCAN}
+};
 // Define constants for DNN versions
 std::unordered_map<std::string, DNNVersion> DNN_VERSION_MAP = {
     {"gnn_v1", DNNVersion::GNN_V1},
@@ -40,7 +49,9 @@ std::unordered_map<DNNVersion, std::pair<std::vector<std::string>, int>> dnnInpu
 ClusterizerinGNN::ClusterizerinGNN(const edm::ParameterSet& conf, const ONNXRuntime* onnxRuntime)
 :     onnxRuntime_(onnxRuntime),
       nnVersion_(conf.getParameter<std::string>("nnVersion")),
-      nnWorkingPoint_(conf.getParameter<double>("nnWorkingPoint")) {
+      AlgoVersion_(conf.getParameter<std::string>("AlgoVersion")),	
+      nnWorkingPoint_(conf.getParameter<double>("nnWorkingPoint")),
+      minPts_(conf.getParameter<int>("minPts")) {
   // some defaults to avoid uninitialized variables
   verbose_ = conf.getUntrackedParameter<bool>("verbose", false);
   zSep = conf.getParameter<double>("zSeparation");
@@ -78,12 +89,13 @@ for (size_t i = 0; i < transientTracks.size(); ++i) {
                 // Add inner connections between i and j
                    allNodes[i].addInner(j);  // Track i adds track j as an inner node
                    allNodes[j].addInner(i);   // Track j adds track i as an inner node
+		  // std::cout << "Adding neighbor to track i: " <<i<<" neighbour "<<j<<" with Z position: "
+                    //  << allNodes[j].getZPosition() << std::endl;
                 }
                }
               }
      
      auto resultGraph = std::make_unique<TrackGraph>(allNodes);
-
     return resultGraph;
 }
 
@@ -98,10 +110,10 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
     std::vector<std::vector<int64_t>> input_shapes;
     std::vector<float> edges_src;
     std::vector<float> edges_dst;
-
+    std::string clusterAlgo_;
+     
 // *************************************
    DNNVersion versionEnum = DNN_VERSION_MAP[nnVersion_];
-
     // Access the input configuration based on the DNN version
     std::vector<std::string> input_names;
     int shapeFeatures = 0;
@@ -121,6 +133,14 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
     }
     std::cout << std::endl;
     std::cout << "Shape of features: " << shapeFeatures << std::endl;
+    auto it = algoMap.find(AlgoVersion_);
+     if (it != algoMap.end()) {
+      clusterAlgo_ = it->first;  
+    } else {
+      throw std::invalid_argument("Invalid algorithm name: " + AlgoVersion_);
+    }
+
+    std::cout<<" clusterAlgo_ "<<clusterAlgo_<<std::endl; 
     int N = tracks.size();
     // Network input shapes.
     auto trackgraph = produce_tracks_graph(tracks);
@@ -244,7 +264,16 @@ vector<TransientVertex> ClusterizerinGNN::vertices(const vector<reco::TransientT
 
             trkgrp->setEdgeWeight(data[1][i], data[1][numEdges + i], edge_predictions[i]);
     }
-    auto connected_components = trkgrp->findSubComponents(nnWorkingPoint_);
+    std::vector<std::vector<int>> connected_components ;
+    if (clusterAlgo_ == "dfsAlgo") { 
+       connected_components = trkgrp->findSubComponents(nnWorkingPoint_);
+       }
+    else if (clusterAlgo_ == "dbscan_impro") { 
+       connected_components = trkgrp->dbscanClustering_Improvised(1-nnWorkingPoint_, minPts_);  
+      }
+    else {
+       connected_components = trkgrp->dbscanClustering(1-nnWorkingPoint_, minPts_);  
+      }	    
     int id = 0;
     std::vector<TrackCollection> outTracks; 
     linkedTrackIdToInputTrackId.resize(connected_components.size());
@@ -360,6 +389,10 @@ void ClusterizerinGNN::fillPSetDescription(edm::ParameterSetDescription& desc) {
   desc.add<edm::FileInPath>("onnxModelPath", edm::FileInPath("RecoVertex/PrimaryVertexProducer/data/model_v6version_PULV_TTbarPU_4Oct_bidirection_th0p3.onnx"))->setComment("Path to GNN (as ONNX model)");
   desc.add<std::string>("nnVersion", "gnn_v1") // gnn_v1, mlp_no_edge_features, mlp_edge_features
         ->setComment("GNN version tag.");
+  desc.add<std::string>("AlgoVersion", "dfsAlgo") 
+        ->setComment("Clustering Algorithm for EdgeConv");
    desc.add<double>("nnWorkingPoint", 0.80)
         ->setComment("Working point of the GNN (in [0, 1]). GNN score above WP will attempt to supercluster.");
+   desc.add<int>("minPts", 4)
+        ->setComment("MinPts for DBSCAN.");
 }

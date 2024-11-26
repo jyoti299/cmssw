@@ -3,7 +3,7 @@ import FWCore.ParameterSet.Config as cms
 offlinePrimaryVertices = cms.EDProducer(
     "PrimaryVertexProducer",
 
-    verbose = cms.untracked.bool(True),
+    verbose = cms.untracked.bool(False),
     TrackLabel = cms.InputTag("generalTracks"),
     beamSpotLabel = cms.InputTag("offlineBeamSpot"),
 

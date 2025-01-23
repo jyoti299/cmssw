@@ -73,7 +73,7 @@ public:
 
 public:
   // default constructor : to make root happy
-  BasicTrajectoryState() : theLocalParametersValid(false), theValid(false), theWeight(0) {}
+  BasicTrajectoryState() : theValid(false), theWeight(0) {}
 
   /// construct invalid trajectory state (without parameters)
   explicit BasicTrajectoryState(const SurfaceType& aSurface);

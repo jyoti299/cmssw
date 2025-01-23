@@ -13,14 +13,14 @@
 
 class PerigeeTrajectoryError {
 public:
-  PerigeeTrajectoryError() : weightIsAvailable(false) {}
+  PerigeeTrajectoryError() {}
   // ~PerigeeTrajectoryError() {}
 
   /*
   PerigeeTrajectoryError(AlgebraicSymMatrix aPerigeeError):
     thePerigeeError(asSMatrix<5>(aPerigeeError)), weightIsAvailable(false) {}
   */
-  explicit PerigeeTrajectoryError(const AlgebraicSymMatrix55 &aPerigeeError)
+  PerigeeTrajectoryError(const AlgebraicSymMatrix55 &aPerigeeError)
       : thePerigeeError(aPerigeeError), weightIsAvailable(false) {}
 
   /**
@@ -71,6 +71,6 @@ private:
   AlgebraicSymMatrix55 thePerigeeError;
   mutable AlgebraicSymMatrix55 thePerigeeWeight;
   mutable int inverseError;
-  mutable bool weightIsAvailable = false;
+  mutable bool weightIsAvailable;
 };
 #endif

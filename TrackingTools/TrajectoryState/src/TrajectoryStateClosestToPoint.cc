@@ -4,7 +4,7 @@
 // Private constructor
 
 TrajectoryStateClosestToPoint::TrajectoryStateClosestToPoint(const FTS& originalFTS, const GlobalPoint& referencePoint)
-    : theFTS(originalFTS), theRefPoint(referencePoint), valid(true), theFTSavailable(true), errorIsAvailable(false) {
+    : theFTS(originalFTS), theRefPoint(referencePoint), valid(true), theFTSavailable(true) {
   auto params = PerigeeConversions::ftsToPerigeeParameters(originalFTS, referencePoint, thePt);
   if (not params) {
     valid = false;
@@ -15,6 +15,8 @@ TrajectoryStateClosestToPoint::TrajectoryStateClosestToPoint(const FTS& original
   if (theFTS.hasError()) {
     thePerigeeError = PerigeeConversions::ftsToPerigeeError(originalFTS);
     errorIsAvailable = true;
+  } else {
+    errorIsAvailable = false;
   }
   theField = &(originalFTS.parameters().magneticField());
 }

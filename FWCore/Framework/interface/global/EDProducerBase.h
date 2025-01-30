@@ -38,7 +38,6 @@ namespace edm {
   class GlobalSchedule;
   class ActivityRegistry;
   class ThinnedAssociationsHelper;
-  class WaitingTaskWithArenaHolder;
   class EventForTransformer;
   class ServiceWeakToken;
 
@@ -78,10 +77,7 @@ namespace edm {
 
     private:
       bool doEvent(EventTransitionInfo const&, ActivityRegistry*, ModuleCallingContext const*);
-      void doAcquire(EventTransitionInfo const&,
-                     ActivityRegistry*,
-                     ModuleCallingContext const*,
-                     WaitingTaskWithArenaHolder&);
+      void doAcquire(EventTransitionInfo const&, ActivityRegistry*, ModuleCallingContext const*, WaitingTaskHolder&&);
       void doTransformAsync(WaitingTaskHolder iTask,
                             size_t iTransformIndex,
                             EventPrincipal const& iEvent,
@@ -112,7 +108,7 @@ namespace edm {
       void doRespondToCloseOutputFile() { clearInputProcessBlockCaches(); }
       void doRegisterThinnedAssociations(ProductRegistry const&, ThinnedAssociationsHelper&) {}
 
-      void registerProductsAndCallbacks(EDProducerBase* module, ProductRegistry* reg) {
+      void registerProductsAndCallbacks(EDProducerBase* module, SignallingProductRegistry* reg) {
         registerProducts(module, reg, moduleDescription_);
       }
       std::string workerType() const { return "WorkerT<EDProducer>"; }
@@ -173,7 +169,7 @@ namespace edm {
 
       virtual bool hasAcquire() const noexcept { return false; }
 
-      virtual void doAcquire_(StreamID, Event const&, edm::EventSetup const&, WaitingTaskWithArenaHolder&);
+      virtual void doAcquire_(StreamID, Event const&, edm::EventSetup const&, WaitingTaskHolder&&);
 
       void setModuleDescription(ModuleDescription const& md) { moduleDescription_ = md; }
       ModuleDescription moduleDescription_;

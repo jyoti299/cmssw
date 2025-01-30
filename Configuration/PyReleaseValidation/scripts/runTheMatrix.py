@@ -85,6 +85,7 @@ if __name__ == '__main__':
                     13034.0,    # RelValTTbar_14TeV             2024 PU = Run3_Flat55To75_PoissonOOTPU
                     12834.7,    # RelValTTbar_14TeV             2024 mkFit
                     16834.0,    # RelValTTbar_14TeV             2025
+                    17034.0,    # RelValTTbar_14TeV		2025 PU = Run3_Flat55To75_PoissonOOTPU
                     14034.0,    # RelValTTbar_14TeV             Run3_2023_FastSim 
                     14234.0,    # RelValTTbar_14TeV             Run3_2023_FastSim   PU = Run3_Flat55To75_PoissonOOTPU
                     2500.201,   # RelValTTbar_14TeV             NanoAOD from existing MINI
@@ -115,18 +116,20 @@ if __name__ == '__main__':
                     139.001,    # Run2021  MinimumBias                  Commissioning2021   
                     
                     # 2022
-                    2022.002001,    # Run2022C ZeroBias
-                    2022.000001,    # Run2022C JetHT
+                    140.045,    # Run2022C JetHT
 
                     # 2023
-                    2023.002001,    # Run2023D ZeroBias
-                    2023.002001,    # Run2023D MuonEG
+                    141.042,    # Run2023D ZeroBias
 
                     # 2024
-                    2024.000001,      # Run2024B ZeroBias
-                    2024.101001,      # Run2024C BTagMu 
-                    2024.202001,      # Run2024D JetMET0
-                    2024.303001,      # Run2024E DisplacedJet
+                    145.014,      # Run2024B ZeroBias
+                    145.104,      # Run2024C JetMet0 
+                    145.202,      # Run2024D EGamma0
+                    145.301,      # Run2024E DisplacedJet
+                    145.408,      # Run2024F ParkingDoubleMuonLowMass0
+                    145.500,      # Run2024G BTagMu
+                    145.604,      # Run2024H JetMET0
+                    145.713,      # Run2024I Tau
                     
                     ###### Heavy Ions
                     ## Data

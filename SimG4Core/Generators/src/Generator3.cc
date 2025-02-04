@@ -27,6 +27,7 @@ Generator3::Generator3(const ParameterSet &p)
       fPtransCut(p.getParameter<bool>("ApplyPtransCut")),
       fEtaCuts(p.getParameter<bool>("ApplyEtaCuts")),
       fPhiCuts(p.getParameter<bool>("ApplyPhiCuts")),
+      fSlepton(p.getParameter<bool>("IsSlepton")),
       theMinPhiCut(p.getParameter<double>("MinPhiCut")),  // in radians (CMS standard)
       theMaxPhiCut(p.getParameter<double>("MaxPhiCut")),
       theMinEtaCut(p.getParameter<double>("MinEtaCut")),
@@ -132,7 +133,7 @@ void Generator3::HepMC2G4(const HepMC3::GenEvent *evt_orig, G4Event *g4evt) {
     delete vtx_;
   }
 
-  for (HepMC3::GenVertexPtr v : evt->vertices()) {
+  for (const HepMC3::GenVertexPtr &v : evt->vertices()) {
     vtx_ =
         new math::XYZTLorentzVector((v->position()).x(), (v->position()).y(), (v->position()).z(), (v->position()).t());
     break;
@@ -144,13 +145,13 @@ void Generator3::HepMC2G4(const HepMC3::GenEvent *evt_orig, G4Event *g4evt) {
   unsigned int ng4vtx = 0;
   unsigned int ng4par = 0;
 
-  for (HepMC3::GenVertexPtr vitr : evt->vertices()) {
+  for (const HepMC3::GenVertexPtr &vitr : evt->vertices()) {
     // loop for vertex, is it a real vertex?
     // Set qvtx to true for any particles that should be propagated by GEANT,
     // i.e., status 1 particles or status 2 particles that decay outside the
     // beampipe.
     G4bool qvtx = false;
-    for (HepMC3::GenParticlePtr pitr : vitr->particles_out()) {
+    for (const HepMC3::GenParticlePtr &pitr : vitr->particles_out()) {
       // For purposes of this function, the status is defined as follows:
       // 1:  particles are not decayed by generator
       // 2:  particles are decayed by generator but need to be propagated by GEANT
@@ -221,7 +222,7 @@ void Generator3::HepMC2G4(const HepMC3::GenEvent *evt_orig, G4Event *g4evt) {
 
     G4PrimaryVertex *g4vtx = new G4PrimaryVertex(x1, y1, z1, t1);
 
-    for (HepMC3::GenParticlePtr pitr : vitr->particles_out()) {
+    for (const HepMC3::GenParticlePtr &pitr : vitr->particles_out()) {
       int status = pitr->status();
       int pdg = pitr->pid();
       bool hasDecayVertex = (nullptr != pitr->end_vertex());
@@ -367,7 +368,7 @@ void Generator3::HepMC2G4(const HepMC3::GenEvent *evt_orig, G4Event *g4evt) {
           // Decay chain outside the fiducial cylinder defined by theRDecLenCut
           // are used for Geant4 tracking with predefined decay channel
           // In the case of decay in vacuum particle is not tracked by Geant4
-        } else if (2 == status && x2 * x2 + y2 * y2 >= theDecRCut2 && std::abs(z2) < Z_hector) {
+        } else if (2 == status && x2 * x2 + y2 * y2 >= theDecRCut2 && (fSlepton || std::abs(z2) < Z_hector)) {
           toBeAdded = true;
           if (verbose > 1)
             edm::LogVerbatim("SimG4CoreGenerator3") << "GenParticle barcode = " << pitr->id() << " passed case 2"
@@ -454,7 +455,7 @@ void Generator3::particleAssignDaughters(G4PrimaryParticle *g4p, HepMC3::GenPart
   double y1 = vp->end_vertex()->position().y();
   double z1 = vp->end_vertex()->position().z();
 
-  for (HepMC3::GenParticlePtr vpdec : vp->end_vertex()->particles_out()) {
+  for (const HepMC3::GenParticlePtr &vpdec : vp->end_vertex()->particles_out()) {
     // transform decay products such that in the rest frame of mother
     math::XYZTLorentzVector pdec(
         vpdec->momentum().px(), vpdec->momentum().py(), vpdec->momentum().pz(), vpdec->momentum().e());
@@ -477,7 +478,14 @@ void Generator3::particleAssignDaughters(G4PrimaryParticle *g4p, HepMC3::GenPart
       LogDebug("SimG4CoreGenerator3::::particleAssignDaughters")
           << "Assigning a " << vpdec->pid() << " as daughter of a " << vp->pid() << " status=" << status;
 
-    if ((status == 2 || (status == 23 && std::abs(vp->pid()) == 1000015) || (status > 50 && status < 100)) &&
+    bool isInList;
+    if (fSlepton) {
+      std::vector<int> fParticleList = {1000011, 1000013, 1000015, 2000011, 2000013, 2000015};
+      isInList = (std::find(fParticleList.begin(), fParticleList.end(), std::abs(vp->pdg_id())) != fParticleList.end());
+    } else {
+      isInList = std::abs(vp->pdg_id()) == 1000015;
+    }
+    if ((status == 2 || (status == 23 && isInList) || (status > 50 && status < 100)) &&
         vpdec->end_vertex() != nullptr) {
       double x2 = vpdec->end_vertex()->position().x();
       double y2 = vpdec->end_vertex()->position().y();
